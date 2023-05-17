@@ -61,7 +61,6 @@ func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
 	}
 
 	var currentState []byte
-	var ttl int64
 	entry, err := dm.getOnCluster(f.hkey, f.key)
 	if err != nil {
 		if !errors.Is(err, ErrKeyNotFound) {
@@ -70,7 +69,6 @@ func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
 		}
 	} else {
 		currentState = entry.Value()
-		ttl = entry.TTL()
 	}
 
 	newState := dm.config.functions[f.function](f.key, currentState, f.value)
@@ -86,10 +84,7 @@ func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
 		kind:          partitions.PRIMARY,
 		value:         newState,
 	}
-	if ttl != 0 {
-		p.timeout = time.Until(time.UnixMilli(ttl))
-		p.opcode = protocol.OpPutEx
-	}
+
 	err = dm.putOnCluster(p)
 	if err != nil {
 		dm.s.log.V(3).Printf("[ERROR] Failed to put the entry after function call: %v", err)
