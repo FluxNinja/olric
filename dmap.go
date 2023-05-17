@@ -128,6 +128,7 @@ func (db *Olric) NewDMap(name string) (*DMap, error) {
 func (dm *DMap) Name() string {
 	return dm.dm.Name()
 }
+
 // Get gets the value for the given key. It returns ErrKeyNotFound if the DB
 // does not contains the key. It's thread-safe. It is safe to modify the contents
 // of the returned value.
@@ -262,33 +263,33 @@ func (dm *DMap) Expire(key string, timeout time.Duration) error {
 //
 // A distributed query looks like the following:
 //
-//   query.M{
-// 	  "$onKey": query.M{
-// 		  "$regexMatch": "^even:",
-// 		  "$options": query.M{
-// 			  "$onValue": query.M{
-// 				  "$ignore": true,
-// 			  },
-// 		  },
-// 	  },
-//   }
+//	  query.M{
+//		  "$onKey": query.M{
+//			  "$regexMatch": "^even:",
+//			  "$options": query.M{
+//				  "$onValue": query.M{
+//					  "$ignore": true,
+//				  },
+//			  },
+//		  },
+//	  }
 //
 // This query finds the keys starts with "even:", drops the values and returns only keys.
 // If you also want to retrieve the values, just remove the $options directive:
 //
-//   query.M{
-// 	  "$onKey": query.M{
-// 		  "$regexMatch": "^even:",
-// 	  },
-//   }
+//	  query.M{
+//		  "$onKey": query.M{
+//			  "$regexMatch": "^even:",
+//		  },
+//	  }
 //
 // In order to iterate over all the keys:
 //
-//   query.M{
-// 	  "$onKey": query.M{
-// 		  "$regexMatch": "",
-// 	  },
-//   }
+//	  query.M{
+//		  "$onKey": query.M{
+//			  "$regexMatch": "",
+//		  },
+//	  }
 //
 // Query function returns a cursor which has Range and Close methods. Please take look at the Range
 // function for further info.
@@ -320,7 +321,7 @@ func (dm *DMap) Delete(key string) error {
 }
 
 // Incr atomically increments key by delta. The return value is the new value after being incremented or an error.
-func (dm *DMap) Incr(key string, delta int) (int, error) {
+func (dm *DMap) Incr(key string, delta float64) (float64, error) {
 	value, err := dm.dm.Incr(key, delta)
 	if err != nil {
 		return 0, convertDMapError(err)
@@ -329,21 +330,12 @@ func (dm *DMap) Incr(key string, delta int) (int, error) {
 }
 
 // Decr atomically decrements key by delta. The return value is the new value after being decremented or an error.
-func (dm *DMap) Decr(key string, delta int) (int, error) {
+func (dm *DMap) Decr(key string, delta float64) (float64, error) {
 	value, err := dm.dm.Decr(key, delta)
 	if err != nil {
 		return 0, convertDMapError(err)
 	}
 	return value, nil
-}
-
-// GetPut atomically sets key to value and returns the old value stored at key.
-func (dm *DMap) GetPut(key string, value interface{}) (interface{}, error) {
-	prev, err := dm.dm.GetPut(key, value)
-	if err != nil {
-		return nil, convertDMapError(err)
-	}
-	return prev, nil
 }
 
 // Destroy flushes the given dmap on the cluster. You should know that there

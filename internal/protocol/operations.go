@@ -28,39 +28,37 @@ const (
 	OpLock                  // 8
 	OpLockWithTimeout       // 9
 	OpUnlock                // 10
-	OpIncr                  // 11
-	OpDecr                  // 12
-	OpGetPut                // 13
-	OpUpdateRouting         // 14
-	OpPutReplica            // 15
-	OpPutIfReplica          // 16
-	OpPutExReplica          // 17
-	OpPutIfExReplica        // 18
-	OpDeletePrev            // 19
-	OpGetPrev               // 20
-	OpGetReplica            // 21
-	OpDeleteReplica         // 22
-	OpDestroyDMapInternal   // 23
-	OpMoveFragment          // 24
-	OpLengthOfPart          // 25
-	OpPipeline              // 26
-	OpPing                  // 27
-	OpStats                 // 28
-	OpExpire                // 29
-	OpExpireReplica         // 30
-	OpQuery                 // 31
-	OpLocalQuery            // 32
-	OpPublishDTopicMessage  // 33
-	OpDestroyDTopicInternal // 34
-	OpDTopicPublish         // 35
-	OpDTopicAddListener     // 36
-	OpDTopicRemoveListener  // 37
-	OpDTopicDestroy         // 38
-	OpCreateStream          // 39
-	OpStreamCreated         // 40
-	OpStreamMessage         // 41
-	OpStreamPing            // 42
-	OpStreamPong            // 43
+	OpUpdateRouting         // 11
+	OpPutReplica            // 12
+	OpPutIfReplica          // 13
+	OpPutExReplica          // 14
+	OpPutIfExReplica        // 15
+	OpDeletePrev            // 16
+	OpGetPrev               // 17
+	OpGetReplica            // 18
+	OpDeleteReplica         // 19
+	OpDestroyDMapInternal   // 20
+	OpMoveFragment          // 21
+	OpLengthOfPart          // 22
+	OpPipeline              // 23
+	OpPing                  // 24
+	OpStats                 // 25
+	OpExpire                // 26
+	OpExpireReplica         // 27
+	OpQuery                 // 28
+	OpLocalQuery            // 29
+	OpPublishDTopicMessage  // 30
+	OpDestroyDTopicInternal // 31
+	OpDTopicPublish         // 32
+	OpDTopicAddListener     // 33
+	OpDTopicRemoveListener  // 34
+	OpDTopicDestroy         // 35
+	OpCreateStream          // 36
+	OpStreamCreated         // 37
+	OpStreamMessage         // 38
+	OpStreamPing            // 39
+	OpStreamPong            // 40
+	OpFunction              // 41
 )
 
 type StatusCode uint8

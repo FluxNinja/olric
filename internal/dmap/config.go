@@ -16,6 +16,7 @@ type dmapConfig struct {
 	lruSamples      int
 	evictionPolicy  config.EvictionPolicy
 	storageEngine   string
+	functions       map[string]config.Function
 }
 
 func (c *dmapConfig) load(dc *config.DMaps, name string) error {
@@ -26,6 +27,11 @@ func (c *dmapConfig) load(dc *config.DMaps, name string) error {
 	c.maxInuse = dc.MaxInuse
 	c.lruSamples = dc.LRUSamples
 	c.evictionPolicy = dc.EvictionPolicy
+
+	// register built-in functions
+	c.functions = make(map[string]config.Function)
+	c.functions[AddFunction] = add
+
 	if dc.StorageEngine != "" {
 		c.storageEngine = dc.StorageEngine
 	}
@@ -57,6 +63,9 @@ func (c *dmapConfig) load(dc *config.DMaps, name string) error {
 			}
 			if cs.StorageEngine != "" && c.storageEngine != cs.StorageEngine {
 				c.storageEngine = cs.StorageEngine
+			}
+			if cs.Functions != nil {
+				c.functions = cs.Functions
 			}
 		}
 	}

@@ -256,9 +256,9 @@ func TestOlric_DMap_Incr(t *testing.T) {
 	dm, err := db.NewDMap("mydmap")
 	assert.NoError(t, err)
 
-	value, err := dm.Incr("mykey", 10)
+	value, err := dm.Incr("mykey", 10.0)
 	assert.NoError(t, err)
-	assert.Equal(t, 10, value)
+	assert.Equal(t, 10.0, value)
 }
 
 func TestOlric_DMap_Decr(t *testing.T) {
@@ -268,30 +268,9 @@ func TestOlric_DMap_Decr(t *testing.T) {
 	dm, err := db.NewDMap("mydmap")
 	assert.NoError(t, err)
 
-	value, err := dm.Decr("mykey", 10)
+	value, err := dm.Decr("mykey", 10.0)
 	assert.NoError(t, err)
-	assert.Equal(t, -10, value)
-}
-
-func TestOlric_DMap_GetPut(t *testing.T) {
-	db, err := newTestOlric(t)
-	assert.NoError(t, err)
-
-	key := "mykey"
-	value := "myvalue"
-	dm, err := db.NewDMap("mydmap")
-	assert.NoError(t, err)
-
-	err = dm.Put(key, value)
-	assert.NoError(t, err)
-
-	oldval, err := dm.GetPut(key, "new-value")
-	assert.NoError(t, err)
-	assert.Equal(t, value, oldval)
-
-	current, err := dm.Get(key)
-	assert.NoError(t, err)
-	assert.Equal(t, "new-value", current)
+	assert.Equal(t, -10.0, value)
 }
 
 func TestOlric_DMap_Destroy(t *testing.T) {

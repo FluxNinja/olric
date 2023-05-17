@@ -143,10 +143,6 @@ func (b *Benchmark) worker(cancel context.CancelFunc, cmd string, ch chan int) {
 			_, err = dm.Get(key)
 		case strings.ToLower(cmd) == "delete":
 			err = dm.Delete(key)
-		case strings.ToLower(cmd) == "incr":
-			_, err = dm.Incr(key, 1)
-		case strings.ToLower(cmd) == "decr":
-			_, err = dm.Decr(key, 1)
 		}
 		if err != nil {
 			b.log.Printf("[ERROR] olric-benchmark: %s: %s: %v", cmd, key, err)

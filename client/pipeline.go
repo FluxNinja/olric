@@ -108,52 +108,6 @@ func (p *Pipeline) Delete(dmap, key string) error {
 	return req.Encode()
 }
 
-func (p *Pipeline) incrOrDecr(opcode protocol.OpCode, dmap, key string, delta int) error {
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	value, err := p.c.serializer.Marshal(delta)
-	if err != nil {
-		return err
-	}
-	req := protocol.NewDMapMessage(opcode)
-	req.SetBuffer(p.buf)
-	req.SetDMap(dmap)
-	req.SetKey(key)
-	req.SetValue(value)
-	req.SetExtra(protocol.AtomicExtra{Timestamp: time.Now().UnixNano()})
-	return req.Encode()
-}
-
-// Incr appends an Incr command to the underlying buffer with the given parameters.
-func (p *Pipeline) Incr(dmap, key string, delta int) error {
-	return p.incrOrDecr(protocol.OpIncr, dmap, key, delta)
-}
-
-// Decr appends a Decr command to the underlying buffer with the given parameters.
-func (p *Pipeline) Decr(dmap, key string, delta int) error {
-	return p.incrOrDecr(protocol.OpDecr, dmap, key, delta)
-}
-
-// GetPut appends a GetPut command to the underlying buffer with the given parameters.
-func (p *Pipeline) GetPut(dmap, key string, value interface{}) error {
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	data, err := p.c.serializer.Marshal(value)
-	if err != nil {
-		return err
-	}
-
-	req := protocol.NewDMapMessage(protocol.OpGetPut)
-	req.SetBuffer(p.buf)
-	req.SetDMap(dmap)
-	req.SetKey(key)
-	req.SetValue(data)
-	req.SetExtra(protocol.AtomicExtra{Timestamp: time.Now().UnixNano()})
-	return req.Encode()
-}
-
 // Destroy appends a Destroy command to the underlying buffer with the given parameters.
 func (p *Pipeline) Destroy(dmap string) error {
 	p.m.Lock()

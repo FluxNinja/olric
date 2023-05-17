@@ -83,66 +83,6 @@ func TestOlric_CLI_Evaluate(t *testing.T) {
 		}
 	})
 
-	t.Run("run evalIncr invalid command", func(t *testing.T) {
-		_ = dm.Put("evalIncr-test", 1)
-		fields := []string{
-			"evalIncr-test",
-		}
-		err := c.evalIncr(dm, fields)
-		if !errors.Is(err, errInvalidCommand) {
-			t.Fatalf("Expected errInvalidCommand, Got: %v", err)
-		}
-	})
-
-	t.Run("run evalIncr", func(t *testing.T) {
-		_ = dm.Put("evalIncr-test", 1)
-		fields := []string{
-			"evalIncr-test", // key
-			"1",             // delta
-		}
-		err := c.evalIncr(dm, fields)
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		val, err := dm.Get("evalIncr-test")
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		if val.(int) != 2 {
-			t.Fatalf("Expected 2, Got: %v", val)
-		}
-	})
-
-	t.Run("run evalIDecr invalid command", func(t *testing.T) {
-		_ = dm.Put("evalDecr-test", 1)
-		fields := []string{
-			"evalDecr-test",
-		}
-		err := c.evalDecr(dm, fields)
-		if !errors.Is(err, errInvalidCommand) {
-			t.Fatalf("Expected errInvalidCommand, Got: %v", err)
-		}
-	})
-
-	t.Run("run evalDecr", func(t *testing.T) {
-		_ = dm.Put("evalDecr-test", 1)
-		fields := []string{
-			"evalDecr-test", // key
-			"1",             // delta
-		}
-		err := c.evalDecr(dm, fields)
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		val, err := dm.Get("evalDecr-test")
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		if val.(int) != 0 {
-			t.Fatalf("Expected 0, Got: %v", val)
-		}
-	})
-
 	t.Run("run evalDestroy", func(t *testing.T) {
 		err := c.evalDestroy(dm)
 		if err != nil {
@@ -175,35 +115,6 @@ func TestOlric_CLI_Evaluate(t *testing.T) {
 		_, err = dm.Get("evalExpire-test")
 		if !errors.Is(err, olric.ErrKeyNotFound) {
 			t.Fatalf("Expected olric.ErrKeyNotFound, Got: %v", err)
-		}
-	})
-
-	t.Run("run evalGetPut invalid command", func(t *testing.T) {
-		fields := []string{
-			"evalGetPut-test",
-		}
-		err := c.evalGetPut(dm, fields)
-		if !errors.Is(err, errInvalidCommand) {
-			t.Fatalf("Expected errInvalidCommand, Got: %v", err)
-		}
-	})
-
-	t.Run("run evalGetPut", func(t *testing.T) {
-		_ = dm.Put("evalGetPut-test", 1)
-		fields := []string{
-			"evalGetPut-test", // key
-			"2",               // delta
-		}
-		err := c.evalGetPut(dm, fields)
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		val, err := dm.Get("evalGetPut-test")
-		if err != nil {
-			t.Fatalf("Expected nil, Got: %v", err)
-		}
-		if val.(string) != "2" {
-			t.Fatalf("Expected 2, Got: %v", val)
 		}
 	})
 

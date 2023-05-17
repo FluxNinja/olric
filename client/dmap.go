@@ -258,35 +258,6 @@ func (c *Client) processIncrDecrResponse(resp protocol.EncodeDecoder) (int, erro
 	return valueToInt(value)
 }
 
-func (c *Client) incrDecr(op protocol.OpCode, name, key string, delta int) (int, error) {
-	value, err := c.serializer.Marshal(delta)
-	if err != nil {
-		return 0, err
-	}
-	req := protocol.NewDMapMessage(op)
-	req.SetDMap(name)
-	req.SetKey(key)
-	req.SetValue(value)
-	req.SetExtra(protocol.AtomicExtra{
-		Timestamp: time.Now().UnixNano(),
-	})
-	resp, err := c.request(req)
-	if err != nil {
-		return 0, err
-	}
-	return c.processIncrDecrResponse(resp)
-}
-
-// Incr atomically increments key by delta. The return value is the new value after being incremented or an error.
-func (d *DMap) Incr(key string, delta int) (int, error) {
-	return d.incrDecr(protocol.OpIncr, d.name, key, delta)
-}
-
-// Decr atomically decrements key by delta. The return value is the new value after being decremented or an error.
-func (d *DMap) Decr(key string, delta int) (int, error) {
-	return d.incrDecr(protocol.OpDecr, d.name, key, delta)
-}
-
 func (c *Client) processGetPutResponse(resp protocol.EncodeDecoder) (interface{}, error) {
 	if err := checkStatusCode(resp); err != nil {
 		return nil, err
@@ -299,26 +270,6 @@ func (c *Client) processGetPutResponse(resp protocol.EncodeDecoder) (interface{}
 		return nil, err
 	}
 	return old, nil
-}
-
-// GetPut atomically sets key to value and returns the old value stored at key.
-func (d *DMap) GetPut(key string, value interface{}) (interface{}, error) {
-	data, err := d.serializer.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	req := protocol.NewDMapMessage(protocol.OpGetPut)
-	req.SetDMap(d.name)
-	req.SetKey(key)
-	req.SetValue(data)
-	req.SetExtra(protocol.AtomicExtra{
-		Timestamp: time.Now().UnixNano(),
-	})
-	resp, err := d.request(req)
-	if err != nil {
-		return nil, err
-	}
-	return d.processGetPutResponse(resp)
 }
 
 // Expire updates the expiry for the given key. It returns ErrKeyNotFound if the

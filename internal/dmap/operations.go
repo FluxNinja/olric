@@ -39,11 +39,6 @@ func (s *Service) RegisterOperations(operations map[protocol.OpCode]func(w, r pr
 	s.operations[protocol.OpDeleteReplica] = s.deleteReplicaOperation
 	s.operations[protocol.OpDeletePrev] = s.deletePrevOperation
 
-	// DMap.Atomic
-	s.operations[protocol.OpIncr] = s.incrDecrOperation
-	s.operations[protocol.OpDecr] = s.incrDecrOperation
-	s.operations[protocol.OpGetPut] = s.getPutOperation
-
 	// DMap.Destroy
 	s.operations[protocol.OpDestroy] = s.destroyOperation
 	s.operations[protocol.OpDestroyDMapInternal] = s.destroyDMapOperation
@@ -58,11 +53,6 @@ func (s *Service) RegisterOperations(operations map[protocol.OpCode]func(w, r pr
 	// DMap.Unlock
 	s.operations[protocol.OpUnlock] = s.unlockOperation
 
-	// DMap.Atomic
-	s.operations[protocol.OpIncr] = s.incrDecrOperation
-	s.operations[protocol.OpDecr] = s.incrDecrOperation
-	s.operations[protocol.OpGetPut] = s.getPutOperation
-
 	// DMap.Expire
 	s.operations[protocol.OpExpire] = s.expireOperation
 	s.operations[protocol.OpExpireReplica] = s.expireReplicaOperation
@@ -73,6 +63,9 @@ func (s *Service) RegisterOperations(operations map[protocol.OpCode]func(w, r pr
 
 	// Internals
 	s.operations[protocol.OpMoveFragment] = s.moveFragmentOperation
+
+	// Function
+	s.operations[protocol.OpFunction] = s.functionOperation
 
 	// Merge
 	for code, f := range s.operations {

@@ -61,11 +61,6 @@ type LengthOfPartExtra struct {
 	Backup bool
 }
 
-// AtomicExtra defines extra values for this operation.
-type AtomicExtra struct {
-	Timestamp int64
-}
-
 // ExpireExtra defines extra values for this operation.
 type ExpireExtra struct {
 	TTL       int64
@@ -106,6 +101,11 @@ type StatsExtra struct {
 	CollectRuntime bool
 }
 
+type FunctionExtra struct {
+	Function  string
+	Timestamp int64
+}
+
 func loadExtras(raw []byte, op OpCode) (interface{}, error) {
 	switch op {
 	case OpPutEx, OpPutExReplica:
@@ -126,10 +126,6 @@ func loadExtras(raw []byte, op OpCode) (interface{}, error) {
 		return extra, err
 	case OpLengthOfPart:
 		extra := LengthOfPartExtra{}
-		err := binary.Read(bytes.NewReader(raw), binary.BigEndian, &extra)
-		return extra, err
-	case OpIncr, OpDecr, OpGetPut:
-		extra := AtomicExtra{}
 		err := binary.Read(bytes.NewReader(raw), binary.BigEndian, &extra)
 		return extra, err
 	case OpExpire, OpExpireReplica:
@@ -174,6 +170,10 @@ func loadExtras(raw []byte, op OpCode) (interface{}, error) {
 		return extra, err
 	case OpStats:
 		extra := StatsExtra{}
+		err := binary.Read(bytes.NewReader(raw), binary.BigEndian, &extra)
+		return extra, err
+	case OpFunction:
+		extra := FunctionExtra{}
 		err := binary.Read(bytes.NewReader(raw), binary.BigEndian, &extra)
 		return extra, err
 	default:

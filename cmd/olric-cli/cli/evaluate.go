@@ -17,7 +17,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -96,54 +95,8 @@ func (c *CLI) evalDelete(dm *client.DMap, fields []string) error {
 	return dm.Delete(key)
 }
 
-func (c *CLI) evalIncr(dm *client.DMap, fields []string) error {
-	if len(fields) < 1 {
-		return errInvalidCommand
-	}
-	if len(fields) < 2 {
-		return fmt.Errorf("%w: missing delta", errInvalidCommand)
-	}
-
-	key, raw := fields[0], strings.Join(fields[1:], " ")
-	delta, err := strconv.Atoi(raw)
-	if err != nil {
-		return fmt.Errorf("invalid delta: %w", err)
-	}
-
-	var current int
-	current, err = dm.Incr(key, delta)
-	if err != nil {
-		return err
-	}
-	c.print(fmt.Sprintf("%d\n", current))
-	return nil
-}
-
 func (c *CLI) evalDestroy(dm *client.DMap) error {
 	return dm.Destroy()
-}
-
-func (c *CLI) evalDecr(dm *client.DMap, fields []string) error {
-	if len(fields) < 1 {
-		return errInvalidCommand
-	}
-	if len(fields) < 2 {
-		return fmt.Errorf("%w: missing delta", errInvalidCommand)
-	}
-
-	key, raw := fields[0], strings.Join(fields[1:], " ")
-	delta, err := strconv.Atoi(raw)
-	if err != nil {
-		return fmt.Errorf("invalid delta: %w", err)
-	}
-
-	var current int
-	current, err = dm.Decr(key, delta)
-	if err != nil {
-		return err
-	}
-	c.print(fmt.Sprintf("%d\n", current))
-	return nil
 }
 
 func (c *CLI) evalExpire(dm *client.DMap, fields []string) error {
@@ -157,20 +110,6 @@ func (c *CLI) evalExpire(dm *client.DMap, fields []string) error {
 		return err
 	}
 	return dm.Expire(key, ttl)
-}
-
-func (c *CLI) evalGetPut(dm *client.DMap, fields []string) error {
-	if len(fields) <= 1 {
-		return errInvalidCommand
-	}
-
-	key, value := fields[0], strings.Join(fields[1:], " ")
-	current, err := dm.GetPut(key, value)
-	if err != nil {
-		return err
-	}
-	c.print(fmt.Sprintf("%v\n", current))
-	return nil
 }
 
 func strToCond(raw string) (cond int16, err error) {
@@ -239,14 +178,8 @@ func (c *CLI) evaluate(dmap, line string) error {
 		return c.evalDelete(dm, fields)
 	case cmd == cmdDestroy:
 		return c.evalDestroy(dm)
-	case cmd == cmdIncr:
-		return c.evalIncr(dm, fields)
-	case cmd == cmdDecr:
-		return c.evalDecr(dm, fields)
 	case cmd == cmdExpire:
 		return c.evalExpire(dm, fields)
-	case cmd == cmdGetPut:
-		return c.evalGetPut(dm, fields)
 	case cmd == cmdPutIf:
 		return c.evalPutIf(dm, fields)
 	case cmd == cmdPutIfEx:

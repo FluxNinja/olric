@@ -40,12 +40,6 @@ func (pr *PipelineResponse) Operation() string {
 		return "PutEx"
 	case pr.response.OpCode() == protocol.OpDelete:
 		return "Delete"
-	case pr.response.OpCode() == protocol.OpIncr:
-		return "Incr"
-	case pr.response.OpCode() == protocol.OpDecr:
-		return "Decr"
-	case pr.response.OpCode() == protocol.OpGetPut:
-		return "GetPut"
 	case pr.response.OpCode() == protocol.OpLockWithTimeout:
 		return "LockWithTimeout"
 	case pr.response.OpCode() == protocol.OpUnlock:

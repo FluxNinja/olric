@@ -33,6 +33,7 @@ type env struct {
 	timeout       time.Duration
 	kind          partitions.Kind
 	fragment      *fragment
+	function      string
 }
 
 func newEnv(opcode protocol.OpCode, name, key string, value []byte, timeout time.Duration, flags int16, kind partitions.Kind) *env {
@@ -136,6 +137,11 @@ func (e *env) toReq(opcode protocol.OpCode) *protocol.DMapMessage {
 		req.SetExtra(protocol.ExpireExtra{
 			Timestamp: e.timestamp,
 			TTL:       e.timeout.Nanoseconds(),
+		})
+	case protocol.OpFunction:
+		req.SetExtra(protocol.FunctionExtra{
+			Function:  e.function,
+			Timestamp: e.timestamp,
 		})
 	}
 	return req

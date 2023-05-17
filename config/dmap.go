@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+type Function func(key string, currentState, arg []byte) (newState []byte)
+
 // EvictionPolicy denotes eviction policy. Currently: LRU or NONE.
 type EvictionPolicy string
 
@@ -62,6 +64,9 @@ type DMap struct {
 	// Name of the storage engine. The default one is kvstore. Leave it empty if
 	// you want to use the default one.
 	StorageEngine string
+
+	// Function is useful to set custom functions per DMap instance.
+	Functions map[string]Function
 }
 
 // Sanitize sets default values to empty configuration variables, if it's possible.
