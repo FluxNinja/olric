@@ -1,6 +1,9 @@
 package dmap
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/gob"
+)
 
 const (
 	AddFunction = "Add"
@@ -14,7 +17,8 @@ func add(_ string, currentState, arg []byte) (newState []byte, result []byte, er
 	// unmarshal currentState
 	var cs counterState
 	if currentState != nil {
-		err = json.Unmarshal(currentState, &cs)
+		buf := bytes.NewBuffer(currentState)
+		err = gob.NewDecoder(buf).Decode(&cs)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -22,7 +26,8 @@ func add(_ string, currentState, arg []byte) (newState []byte, result []byte, er
 
 	// unmarshal arg into float64
 	var i float64
-	err = json.Unmarshal(arg, &i)
+	buf := bytes.NewBuffer(arg)
+	err = gob.NewDecoder(buf).Decode(&i)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -31,16 +36,20 @@ func add(_ string, currentState, arg []byte) (newState []byte, result []byte, er
 	cs.Value += i
 
 	// marshal the new state
-	newState, err = json.Marshal(cs)
+	buf = new(bytes.Buffer)
+	err = gob.NewEncoder(buf).Encode(cs)
 	if err != nil {
 		return nil, nil, err
 	}
+	newState = buf.Bytes()
 
 	// marshal the result
-	result, err = json.Marshal(cs.Value)
+	buf = new(bytes.Buffer)
+	err = gob.NewEncoder(buf).Encode(cs.Value)
 	if err != nil {
 		return nil, nil, err
 	}
+	result = buf.Bytes()
 
 	return newState, result, nil
 }

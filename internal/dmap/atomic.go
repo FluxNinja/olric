@@ -14,14 +14,20 @@
 
 package dmap
 
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/gob"
+)
 
 func (dm *DMap) Incr(key string, delta float64) (float64, error) {
-	// marshal delta as bytes
-	deltaBytes, err := json.Marshal(delta)
+	// marshal delta as gob
+	buf := new(bytes.Buffer)
+	err := gob.NewEncoder(buf).Encode(delta)
 	if err != nil {
 		return 0, err
 	}
+	deltaBytes := buf.Bytes()
+
 	resultBytes, err := dm.Function(key, AddFunction, deltaBytes)
 	if err != nil {
 		return 0, err
@@ -29,7 +35,8 @@ func (dm *DMap) Incr(key string, delta float64) (float64, error) {
 
 	// unmarshal result as float64
 	var result float64
-	err = json.Unmarshal(resultBytes, &result)
+	buf = bytes.NewBuffer(resultBytes)
+	err = gob.NewDecoder(buf).Decode(&result)
 	if err != nil {
 		return 0, err
 	}
