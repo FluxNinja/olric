@@ -66,7 +66,11 @@ func (dm *DMap) functionOnCluster(f *env) ([]byte, error) {
 		ttl = entry.TTL()
 	}
 
-	newState, result := dm.config.functions[f.function](f.key, currentState, f.value)
+	newState, result, err := dm.config.functions[f.function](f.key, currentState, f.value)
+	if err != nil {
+		dm.s.log.V(3).Printf("[ERROR] Failed to call function: %s on DMap: %s: %v", f.function, f.dmap, err)
+		return nil, err
+	}
 
 	// Put
 	p := &env{

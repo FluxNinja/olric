@@ -21,7 +21,7 @@ import (
 )
 
 // DMapMessageHeaderSize defines total count of bytes in a DMapMessage
-const DMapMessageHeaderSize uint32 = 7
+const DMapMessageHeaderSize uint32 = 9
 
 const (
 	// MagicDMapReq is a magic number which denotes DMap message requests on the wire.
@@ -32,22 +32,24 @@ const (
 
 // Header defines a message header for both request and response.
 type DMapMessageHeader struct {
-	Op         OpCode     // 1
-	DMapLen    uint16     // 2
-	KeyLen     uint16     // 2
-	ExtraLen   uint8      // 1
-	StatusCode StatusCode // 1
+	Op          OpCode     // 1
+	DMapLen     uint16     // 2
+	KeyLen      uint16     // 2
+	FunctionLen uint16     // 2
+	ExtraLen    uint8      // 1
+	StatusCode  StatusCode // 1
 }
 
 // DMapMessage is a message type in OBP. It can be used to access and modify DMap data structure.
 type DMapMessage struct {
+	extra    interface{}
+	buf      *bytes.Buffer
+	dmap     string
+	key      string
+	function string
+	value    []byte
 	Header
 	DMapMessageHeader
-	extra interface{}
-	dmap  string
-	key   string
-	value []byte
-	buf   *bytes.Buffer
 }
 
 // NewDMapMessage returns a new DMapMessage with the given operation code.
@@ -153,6 +155,16 @@ func (d *DMapMessage) Key() string {
 	return d.key
 }
 
+// SetFunction sets the function name to be executed on the server side.
+func (d *DMapMessage) SetFunction(function string) {
+	d.function = function
+}
+
+// Function returns the function name to be executed on the server side.
+func (d *DMapMessage) Function() string {
+	return d.function
+}
+
 // SetExtra sets the extra section for the message, if there is any.
 func (d *DMapMessage) SetExtra(extra interface{}) {
 	d.extra = extra
@@ -168,10 +180,11 @@ func (d *DMapMessage) Encode() error {
 	// Calculate lengths here
 	d.DMapLen = uint16(len(d.dmap))
 	d.KeyLen = uint16(len(d.key))
+	d.FunctionLen = uint16(len(d.function))
 	if d.extra != nil {
 		d.ExtraLen = uint8(binary.Size(d.extra))
 	}
-	d.MessageLength = DMapMessageHeaderSize + uint32(len(d.dmap)+len(d.key)+len(d.value)+int(d.ExtraLen))
+	d.MessageLength = DMapMessageHeaderSize + uint32(len(d.dmap)+len(d.key)+len(d.function)+len(d.value)+int(d.ExtraLen))
 
 	err := binary.Write(d.buf, binary.BigEndian, d.Header)
 	if err != nil {
@@ -200,6 +213,11 @@ func (d *DMapMessage) Encode() error {
 		return err
 	}
 
+	_, err = d.buf.WriteString(d.function)
+	if err != nil {
+		return err
+	}
+
 	_, err = d.buf.Write(d.value)
 	return err
 }
@@ -224,11 +242,12 @@ func (d *DMapMessage) Decode() error {
 	}
 	d.dmap = string(d.buf.Next(int(d.DMapLen)))
 	d.key = string(d.buf.Next(int(d.KeyLen)))
+	d.function = string(d.buf.Next(int(d.FunctionLen)))
 
 	// There is no maximum value for BodyLen which also includes ValueLen.
 	// So our limit is available memory amount at the time of execution.
 	// Please note that maximum partition size should not exceed 50MB for a smooth operation.
-	vlen := int(d.MessageLength) - int(d.ExtraLen) - int(d.KeyLen) - int(d.DMapLen) - int(DMapMessageHeaderSize)
+	vlen := int(d.MessageLength) - int(d.ExtraLen) - int(d.KeyLen) - int(d.FunctionLen) - int(d.DMapLen) - int(DMapMessageHeaderSize)
 	if vlen != 0 {
 		d.value = make([]byte, vlen)
 		copy(d.value, d.buf.Next(vlen))

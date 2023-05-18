@@ -67,6 +67,7 @@ func newEnvFromReq(r protocol.EncodeDecoder, kind partitions.Kind) *env {
 	e.dmap = req.DMap()
 	e.key = req.Key()
 	e.value = req.Value()
+	e.function = req.Function()
 	e.opcode = req.Op
 	e.kind = kind
 	e.hkey = partitions.HKey(req.DMap(), req.Key())
@@ -100,6 +101,8 @@ func newEnvFromReq(r protocol.EncodeDecoder, kind partitions.Kind) *env {
 	case protocol.OpExpire:
 		e.timestamp = req.Extra().(protocol.ExpireExtra).Timestamp
 		e.timeout = time.Duration(req.Extra().(protocol.ExpireExtra).TTL)
+	case protocol.OpFunction:
+		e.timestamp = req.Extra().(protocol.FunctionExtra).Timestamp
 	}
 	return e
 }
@@ -110,6 +113,7 @@ func (e *env) toReq(opcode protocol.OpCode) *protocol.DMapMessage {
 	req.SetDMap(e.dmap)
 	req.SetKey(e.key)
 	req.SetValue(e.value)
+	req.SetFunction(e.function)
 
 	// Prepare extras
 	switch opcode {
@@ -140,7 +144,6 @@ func (e *env) toReq(opcode protocol.OpCode) *protocol.DMapMessage {
 		})
 	case protocol.OpFunction:
 		req.SetExtra(protocol.FunctionExtra{
-			Function:  e.function,
 			Timestamp: e.timestamp,
 		})
 	}

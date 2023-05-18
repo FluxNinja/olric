@@ -21,12 +21,13 @@ func (s *Service) functionOperation(w, r protocol.EncodeDecoder) {
 		dmap:      req.DMap(),
 		key:       req.Key(),
 		value:     req.Value(),
+		function:  req.Function(),
 		timestamp: time.Now().UnixNano(),
 		kind:      partitions.PRIMARY,
 	}
 	extra := req.Extra()
 	if extra != nil {
-		e.function = extra.(protocol.FunctionExtra).Function
+		e.timestamp = extra.(protocol.FunctionExtra).Timestamp
 	}
 
 	result, err := dm.function(e)

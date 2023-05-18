@@ -10,21 +10,21 @@ type counterState struct {
 	Value float64 `json:"value"`
 }
 
-func add(_ string, currentState, arg []byte) (newState []byte, result []byte) {
+func add(_ string, currentState, arg []byte) (newState []byte, result []byte, err error) {
 	// unmarshal currentState
 	var cs counterState
 	if currentState != nil {
-		err := json.Unmarshal(currentState, &cs)
+		err = json.Unmarshal(currentState, &cs)
 		if err != nil {
-			return
+			return nil, nil, err
 		}
 	}
 
 	// unmarshal arg into float64
 	var i float64
-	err := json.Unmarshal(arg, &i)
+	err = json.Unmarshal(arg, &i)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	// add the integer to the counter
@@ -33,14 +33,14 @@ func add(_ string, currentState, arg []byte) (newState []byte, result []byte) {
 	// marshal the new state
 	newState, err = json.Marshal(cs)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	// marshal the result
 	result, err = json.Marshal(cs.Value)
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
-	return
+	return newState, result, nil
 }

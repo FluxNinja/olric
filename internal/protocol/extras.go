@@ -102,7 +102,6 @@ type StatsExtra struct {
 }
 
 type FunctionExtra struct {
-	Function  string
 	Timestamp int64
 }
 
