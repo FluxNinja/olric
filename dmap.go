@@ -320,24 +320,6 @@ func (dm *DMap) Delete(key string) error {
 	return convertDMapError(err)
 }
 
-// Incr atomically increments key by delta. The return value is the new value after being incremented or an error.
-func (dm *DMap) Incr(key string, delta float64) (float64, error) {
-	value, err := dm.dm.Incr(key, delta)
-	if err != nil {
-		return 0, convertDMapError(err)
-	}
-	return value, nil
-}
-
-// Decr atomically decrements key by delta. The return value is the new value after being decremented or an error.
-func (dm *DMap) Decr(key string, delta float64) (float64, error) {
-	value, err := dm.dm.Decr(key, delta)
-	if err != nil {
-		return 0, convertDMapError(err)
-	}
-	return value, nil
-}
-
 // Destroy flushes the given dmap on the cluster. You should know that there
 // is no global lock on DMaps. So if you call Put/PutEx and Destroy methods
 // concurrently on the cluster, Put/PutEx calls may set new values to the dmap.

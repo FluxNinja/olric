@@ -249,30 +249,6 @@ func TestOlric_DMap_Delete(t *testing.T) {
 	assert.Error(t, ErrKeyNotFound, err)
 }
 
-func TestOlric_DMap_Incr(t *testing.T) {
-	db, err := newTestOlric(t)
-	assert.NoError(t, err)
-
-	dm, err := db.NewDMap("mydmap")
-	assert.NoError(t, err)
-
-	value, err := dm.Incr("mykey", 10.0)
-	assert.NoError(t, err)
-	assert.Equal(t, 10.0, value)
-}
-
-func TestOlric_DMap_Decr(t *testing.T) {
-	db, err := newTestOlric(t)
-	assert.NoError(t, err)
-
-	dm, err := db.NewDMap("mydmap")
-	assert.NoError(t, err)
-
-	value, err := dm.Decr("mykey", 10.0)
-	assert.NoError(t, err)
-	assert.Equal(t, -10.0, value)
-}
-
 func TestOlric_DMap_Destroy(t *testing.T) {
 	db, err := newTestOlric(t)
 	assert.NoError(t, err)

@@ -28,10 +28,6 @@ func (c *dmapConfig) load(dc *config.DMaps, name string) error {
 	c.lruSamples = dc.LRUSamples
 	c.evictionPolicy = dc.EvictionPolicy
 
-	// register built-in functions
-	c.functions = make(map[string]config.Function)
-	c.functions[AddFunction] = add
-
 	if dc.StorageEngine != "" {
 		c.storageEngine = dc.StorageEngine
 	}
