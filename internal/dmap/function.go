@@ -7,7 +7,6 @@ import (
 
 	"github.com/buraksezer/olric/internal/cluster/partitions"
 	"github.com/buraksezer/olric/internal/protocol"
-	"github.com/buraksezer/olric/pkg/storage"
 )
 
 func (dm *DMap) Function(key string, function string, arg []byte) ([]byte, error) {
@@ -20,14 +19,10 @@ func (dm *DMap) Function(key string, function string, arg []byte) ([]byte, error
 		function:  function,
 		value:     arg,
 	}
-	entry, err := dm.function(e)
-	if err != nil {
-		return nil, err
-	}
-	return entry.Value(), nil
+	return dm.function(e)
 }
 
-func (dm *DMap) function(e *env) (storage.Entry, error) {
+func (dm *DMap) function(e *env) ([]byte, error) {
 	e.hkey = partitions.HKey(dm.name, e.key)
 	member := dm.s.primary.PartitionByHKey(e.hkey).Owner()
 	// We are on the partition owner. So we can call the function directly.
@@ -41,12 +36,10 @@ func (dm *DMap) function(e *env) (storage.Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	entry := dm.engine.NewEntry()
-	entry.Decode(resp.Value())
-	return entry, err
+	return resp.Value(), nil
 }
 
-func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
+func (dm *DMap) functionOnCluster(f *env) ([]byte, error) {
 	atomicKey := f.dmap + f.key
 	dm.s.locker.Lock(atomicKey)
 	defer func() {
@@ -73,7 +66,7 @@ func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
 		ttl = entry.TTL()
 	}
 
-	newState := dm.config.functions[f.function](f.key, currentState, f.value)
+	newState, result := dm.config.functions[f.function](f.key, currentState, f.value)
 
 	// Put
 	p := &env{
@@ -96,12 +89,5 @@ func (dm *DMap) functionOnCluster(f *env) (storage.Entry, error) {
 		return nil, err
 	}
 
-	// get the entry again
-	entry, err = dm.getOnCluster(f.hkey, f.key)
-	if err != nil {
-		dm.s.log.V(3).Printf("[ERROR] Failed to get the entry after function call: %v", err)
-		return nil, err
-	}
-
-	return entry, nil
+	return result, nil
 }

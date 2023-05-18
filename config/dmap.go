@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-type Function func(key string, currentState, arg []byte) (newState []byte)
+type Function func(key string, currentState, arg []byte) (newState []byte, result []byte)
 
 // EvictionPolicy denotes eviction policy. Currently: LRU or NONE.
 type EvictionPolicy string

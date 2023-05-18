@@ -27,15 +27,13 @@ func (dm *DMap) Incr(key string, delta float64) (float64, error) {
 		return 0, err
 	}
 
-	// unmarshal counterState
-	var cs counterState
-	if resultBytes != nil {
-		err := json.Unmarshal(resultBytes, &cs)
-		if err != nil {
-			return 0, err
-		}
+	// unmarshal result as float64
+	var result float64
+	err = json.Unmarshal(resultBytes, &result)
+	if err != nil {
+		return 0, err
 	}
-	return cs.Value, nil
+	return result, nil
 }
 
 func (dm *DMap) Decr(key string, delta float64) (float64, error) {

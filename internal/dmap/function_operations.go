@@ -29,11 +29,11 @@ func (s *Service) functionOperation(w, r protocol.EncodeDecoder) {
 		e.function = extra.(protocol.FunctionExtra).Function
 	}
 
-	entry, err := dm.function(e)
+	result, err := dm.function(e)
 	if err != nil {
 		neterrors.ErrorResponse(w, err)
 		return
 	}
-	w.SetValue(entry.Encode())
+	w.SetValue(result)
 	w.SetStatus(protocol.StatusOK)
 }
