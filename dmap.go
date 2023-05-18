@@ -247,6 +247,15 @@ func (dm *DMap) Expire(key string, timeout time.Duration) error {
 	return convertDMapError(err)
 }
 
+// Function runs the given function on the owner of the given key.
+func (dm *DMap) Function(key, functionName string, arg []byte) ([]byte, error) {
+	value, err := dm.dm.Function(key, functionName, arg)
+	if err != nil {
+		return nil, convertDMapError(err)
+	}
+	return value, nil
+}
+
 // Query runs a distributed query on a dmap instance.
 // Olric supports a very simple query DSL and now, it only scans keys. The query DSL has very
 // few keywords:
