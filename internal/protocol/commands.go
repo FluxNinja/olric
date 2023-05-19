@@ -69,6 +69,7 @@ type DMapCommands struct {
 	LockLease   string
 	PLockLease  string
 	Scan        string
+	Function    string
 }
 
 var DMap = &DMapCommands{
@@ -90,6 +91,7 @@ var DMap = &DMapCommands{
 	LockLease:   "dm.locklease",
 	PLockLease:  "dm.plocklease",
 	Scan:        "dm.scan",
+	Function:    "dm.function",
 }
 
 type PubSubCommands struct {

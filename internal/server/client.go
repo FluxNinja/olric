@@ -52,7 +52,7 @@ func (c *Client) Addresses() map[string]struct{} {
 	defer c.mu.RUnlock()
 
 	addresses := make(map[string]struct{})
-	for address, _ := range c.clients {
+	for address := range c.clients {
 		addresses[address] = struct{}{}
 	}
 	return addresses
