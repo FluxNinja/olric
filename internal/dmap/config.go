@@ -27,6 +27,7 @@ func (c *dmapConfig) load(dc *config.DMaps, name string) error {
 	c.maxInuse = dc.MaxInuse
 	c.lruSamples = dc.LRUSamples
 	c.evictionPolicy = dc.EvictionPolicy
+	c.functions = make(map[string]config.Function)
 
 	if dc.StorageEngine != "" {
 		c.storageEngine = dc.StorageEngine
