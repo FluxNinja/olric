@@ -15,11 +15,13 @@
 package dmap
 
 import (
+	"sync"
 	"time"
 )
 
 type accessLog struct {
-	m map[uint64]int64
+	lock sync.RWMutex
+	m    map[uint64]int64
 }
 
 func newAccessLog() *accessLog {
@@ -29,19 +31,27 @@ func newAccessLog() *accessLog {
 }
 
 func (a *accessLog) touch(hkey uint64) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	a.m[hkey] = time.Now().UnixNano()
 }
 
 func (a *accessLog) get(hkey uint64) (int64, bool) {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
 	timestamp, ok := a.m[hkey]
 	return timestamp, ok
 }
 
 func (a *accessLog) delete(hkey uint64) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
 	delete(a.m, hkey)
 }
 
 func (a *accessLog) iterator(f func(hkey uint64, timestamp int64) bool) {
+	a.lock.RLock()
+	defer a.lock.RUnlock()
 	for hkey, timestamp := range a.m {
 		if !f(hkey, timestamp) {
 			break
