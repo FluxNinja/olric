@@ -82,12 +82,7 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	dm, ok := s.dmaps[name]
-	if ok {
-		return dm, nil
-	}
-
-	dm = &DMap{
+	dm := &DMap{
 		config: &dmapConfig{},
 		name:   name,
 		s:      s,
