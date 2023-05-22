@@ -131,8 +131,7 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 
 	dm, err := s.getDMap(name)
 	if err != nil {
-		s.log.V(3).Printf("[ERROR] Failed to load DMap: %s: %v", name, err)
-		return
+		s.log.V(3).Printf("[WARN] Failed to load DMap: %s: %v", name, err)
 	}
 
 	// create a DMap and remove it later
