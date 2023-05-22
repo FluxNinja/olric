@@ -106,15 +106,6 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 	return dm, nil
 }
 
-// getOrCreate is a shortcut function to create a new DMap or get an already initialized DMap instance.
-func (s *Service) getOrCreateDMap(name string) (*DMap, error) {
-	dm, err := s.getDMap(name)
-	if errors.Is(err, ErrDMapNotFound) {
-		return s.NewDMap(name)
-	}
-	return dm, err
-}
-
 func (dm *DMap) getPartitionByHKey(hkey uint64, kind partitions.Kind) *partitions.Partition {
 	var part *partitions.Partition
 	switch {

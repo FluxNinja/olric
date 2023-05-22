@@ -22,9 +22,10 @@ import (
 )
 
 func (s *Service) queryOperationCommon(w, r protocol.EncodeDecoder,
-	f func(dm *DMap, q query.M, r protocol.EncodeDecoder) (interface{}, error)) {
+	f func(dm *DMap, q query.M, r protocol.EncodeDecoder) (interface{}, error),
+) {
 	req := r.(*protocol.DMapMessage)
-	dm, err := s.getOrCreateDMap(req.DMap())
+	dm, err := s.getDMap(req.DMap())
 	if err == ErrDMapNotFound {
 		// No need to create a new DMap here.
 		w.SetStatus(protocol.StatusOK)

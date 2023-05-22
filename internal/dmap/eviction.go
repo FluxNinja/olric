@@ -125,11 +125,11 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 
 	// We need limits to prevent CPU starvation. deleteOnCluster does some network operation
 	// to delete keys from the backup nodes and the previous owners.
-	var maxKeyCount = 20
-	var maxTotalCount = 100
-	var totalCount = 0
+	maxKeyCount := 20
+	maxTotalCount := 100
+	totalCount := 0
 
-	dm, err := s.getOrCreateDMap(name)
+	dm, err := s.getDMap(name)
 	if err != nil {
 		s.log.V(3).Printf("[ERROR] Failed to load DMap: %s: %v", name, err)
 		return
@@ -198,7 +198,7 @@ type lruItem struct {
 }
 
 func (dm *DMap) evictKeyWithLRU(e *env) error {
-	var idx = 1
+	idx := 1
 	var items []lruItem
 
 	// Warning: fragment is already locked by DMap.Put. Be sure about that before editing this function.

@@ -25,7 +25,7 @@ import (
 
 func (s *Service) destroyOperation(w, r protocol.EncodeDecoder) {
 	req := r.(*protocol.DMapMessage)
-	dm, err := s.getOrCreateDMap(req.DMap())
+	dm, err := s.getDMap(req.DMap())
 	if err != nil {
 		neterrors.ErrorResponse(w, err)
 		return

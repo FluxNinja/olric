@@ -22,9 +22,10 @@ import (
 )
 
 func (s *Service) lockOperationCommon(w, r protocol.EncodeDecoder,
-	f func(dm *DMap, r protocol.EncodeDecoder) (*LockContext, error)) {
+	f func(dm *DMap, r protocol.EncodeDecoder) (*LockContext, error),
+) {
 	req := r.(*protocol.DMapMessage)
-	dm, err := s.getOrCreateDMap(req.DMap())
+	dm, err := s.getDMap(req.DMap())
 	if err != nil {
 		neterrors.ErrorResponse(w, err)
 		return
@@ -57,7 +58,7 @@ func (s *Service) lockOperation(w, r protocol.EncodeDecoder) {
 
 func (s *Service) unlockOperation(w, r protocol.EncodeDecoder) {
 	req := r.(*protocol.DMapMessage)
-	dm, err := s.getOrCreateDMap(req.DMap())
+	dm, err := s.getDMap(req.DMap())
 	if err != nil {
 		neterrors.ErrorResponse(w, err)
 		return

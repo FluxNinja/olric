@@ -22,7 +22,7 @@ import (
 
 func (s *Service) putOperationCommon(w, r protocol.EncodeDecoder, f func(dm *DMap, r protocol.EncodeDecoder) error) {
 	req := r.(*protocol.DMapMessage)
-	dm, err := s.getOrCreateDMap(req.DMap())
+	dm, err := s.getDMap(req.DMap())
 	if err != nil {
 		neterrors.ErrorResponse(w, err)
 		return
