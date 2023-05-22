@@ -40,6 +40,11 @@ func (dm *DMap) function(e *env) ([]byte, error) {
 }
 
 func (dm *DMap) functionOnCluster(f *env) ([]byte, error) {
+  function, ok := dm.config.functions[f.function]
+  if !ok {
+    return nil, fmt.Errorf("function: %s is not registered", f.function)
+  }
+
 	atomicKey := f.dmap + f.key
 	dm.s.locker.Lock(atomicKey)
 	defer func() {
@@ -48,10 +53,6 @@ func (dm *DMap) functionOnCluster(f *env) ([]byte, error) {
 			dm.s.log.V(3).Printf("[ERROR] Failed to release the fine grained lock for key: %s on DMap: %s: %v", f.key, f.dmap, err)
 		}
 	}()
-
-	if dm.config.functions[f.function] == nil {
-		return nil, fmt.Errorf("function: %s is not registered", f.function)
-	}
 
 	var currentState []byte
 	var ttl int64
@@ -66,7 +67,7 @@ func (dm *DMap) functionOnCluster(f *env) ([]byte, error) {
 		ttl = entry.TTL()
 	}
 
-	newState, result, err := dm.config.functions[f.function](f.key, currentState, f.value)
+	newState, result, err := function(f.key, currentState, f.value)
 	if err != nil {
 		dm.s.log.V(3).Printf("[ERROR] Failed to call function: %s on DMap: %s: %v", f.function, f.dmap, err)
 		return nil, err
