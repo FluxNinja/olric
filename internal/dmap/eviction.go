@@ -129,18 +129,19 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 	maxTotalCount := 100
 	totalCount := 0
 
+	createdDMap := false
+
 	dm, err := s.getDMap(name)
 	if err != nil {
 		s.log.V(3).Printf("[WARN] Failed to load DMap: %s: %v", name, err)
+		// create a DMap and remove it later
+		dm, err = s.NewDMap(name)
+		if err != nil {
+			s.log.V(3).Printf("[ERROR] Failed to create DMap: %s: %v", name, err)
+			return
+		}
+		createdDMap = true
 	}
-
-	// create a DMap and remove it later
-	dm, err = s.NewDMap(name)
-	if err != nil {
-		s.log.V(3).Printf("[ERROR] Failed to create DMap: %s: %v", name, err)
-		return
-	}
-	createdDMap := true
 
 	janitor := func() bool {
 		if totalCount > maxTotalCount {
