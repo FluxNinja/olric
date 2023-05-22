@@ -124,6 +124,11 @@ func (db *Olric) NewDMap(name string) (*DMap, error) {
 	}, nil
 }
 
+// DeleteDMap deletes the DMap instance from the local process.
+func (db *Olric) DeleteDMap(name string) error {
+	return db.dmap.DeleteDMap(name)
+}
+
 // Name exposes name of the DMap.
 func (dm *DMap) Name() string {
 	return dm.dm.Name()

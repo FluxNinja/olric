@@ -101,6 +101,20 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 	return dm, nil
 }
 
+// DeleteDMAP deletes the DMap instance from the local process
+// Use Destroy() to delete storage data as well.
+func (s *Service) DeleteDMap(name string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	_, ok := s.dmaps[name]
+	if !ok {
+		return ErrDMapNotFound
+	}
+	delete(s.dmaps, name)
+	return nil
+}
+
 func (dm *DMap) getPartitionByHKey(hkey uint64, kind partitions.Kind) *partitions.Partition {
 	var part *partitions.Partition
 	switch {

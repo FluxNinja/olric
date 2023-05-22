@@ -135,6 +135,14 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 		return
 	}
 
+	// create a DMap and remove it later
+	dm, err = s.NewDMap(name)
+	if err != nil {
+		s.log.V(3).Printf("[ERROR] Failed to create DMap: %s: %v", name, err)
+		return
+	}
+	createdDMap := true
+
 	janitor := func() bool {
 		if totalCount > maxTotalCount {
 			// Release the lock. Eviction will be triggered again.
@@ -149,7 +157,7 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 				// this means 'break'.
 				return false
 			}
-			if isKeyExpired(entry.TTL()) || dm.isKeyIdleOnFragment(hkey, f) {
+			if isKeyExpired(entry.TTL()) || dm.isKeyIdleOnFragment(hkey, f) || createdDMap {
 				err = dm.deleteOnCluster(hkey, entry.Key(), f)
 				if err != nil {
 					// It will be tried again.
@@ -163,6 +171,13 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 			}
 			return true
 		})
+
+		if createdDMap {
+			err := s.DeleteDMap(name)
+			if err != nil {
+				s.log.V(3).Printf("[ERROR] Failed to delete DMap: %s: %v", name, err)
+			}
+		}
 
 		totalCount += count
 		return count >= maxKeyCount/4
