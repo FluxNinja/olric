@@ -26,7 +26,7 @@ func (s *Service) expireCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getDMap(expireCmd.DMap)
+	dm, err := s.getOrCreateDMap(expireCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -56,7 +56,7 @@ func (s *Service) pexpireCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getDMap(pexpireCmd.DMap)
+	dm, err := s.getOrCreateDMap(pexpireCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

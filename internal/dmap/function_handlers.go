@@ -12,7 +12,7 @@ func (s *Service) functionCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getDMap(functionCmd.DMap)
+	dm, err := s.getOrCreateDMap(functionCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
