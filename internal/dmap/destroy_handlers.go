@@ -76,7 +76,7 @@ func (s *Service) destroyCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(destroyCmd.DMap)
+	dm, err := s.getDMap(destroyCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

@@ -237,6 +237,8 @@ type DMap interface {
 	// Redis client has retransmission logic in case of timeouts, pipeline
 	// can be retransmitted and commands can be executed more than once.
 	Pipeline(opts ...PipelineOption) (*DMapPipeline, error)
+
+	Function(ctx context.Context, label string, function string, arg []byte) ([]byte, error)
 }
 
 // PipelineOption is a function for defining options to control behavior of the Pipeline command.
@@ -281,6 +283,9 @@ type PubSubOption func(option *pubsubConfig)
 type Client interface {
 	// NewDMap returns a new DMap client with the given options.
 	NewDMap(name string, options ...DMapOption) (DMap, error)
+
+	// DeleteDMap deletes the DMap on the cluster.
+	DeleteDMap(name string) error
 
 	// NewPubSub returns a new PubSub client with the given options.
 	NewPubSub(options ...PubSubOption) (*PubSub, error)

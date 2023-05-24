@@ -82,12 +82,7 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	dm, ok := s.dmaps[name]
-	if ok {
-		return dm, nil
-	}
-
-	dm = &DMap{
+	dm := &DMap{
 		config:       &dmapConfig{},
 		name:         name,
 		fragmentName: s.fragmentName(name),
@@ -103,13 +98,18 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 	return dm, nil
 }
 
-// getOrCreate is a shortcut function to create a new DMap or get an already initialized DMap instance.
-func (s *Service) getOrCreateDMap(name string) (*DMap, error) {
-	dm, err := s.getDMap(name)
-	if errors.Is(err, ErrDMapNotFound) {
-		return s.NewDMap(name)
+// DeleteDMAP deletes the DMap instance from the local process
+// Use Destroy() to delete storage data as well.
+func (s *Service) DeleteDMap(name string) error {
+	s.Lock()
+	defer s.Unlock()
+
+	_, ok := s.dmaps[name]
+	if !ok {
+		return ErrDMapNotFound
 	}
-	return dm, err
+	delete(s.dmaps, name)
+	return nil
 }
 
 func (dm *DMap) getPartitionByHKey(hkey uint64, kind partitions.Kind) *partitions.Partition {

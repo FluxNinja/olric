@@ -22,7 +22,7 @@ import (
 )
 
 func (s *Service) incrDecrCommon(cmd, dmap, key string, delta int) (int, error) {
-	dm, err := s.getOrCreateDMap(dmap)
+	dm, err := s.getDMap(dmap)
 	if err != nil {
 		return 0, err
 	}
@@ -67,7 +67,7 @@ func (s *Service) getPutCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(getPutCmd.DMap)
+	dm, err := s.getDMap(getPutCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -103,7 +103,7 @@ func (s *Service) incrByFloatCommandHandler(conn redcon.Conn, cmd redcon.Command
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(incrCmd.DMap)
+	dm, err := s.getDMap(incrCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

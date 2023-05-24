@@ -294,6 +294,24 @@ func (dm *ClusterDMap) GetPut(ctx context.Context, key string, value interface{}
 	}, nil
 }
 
+func (dm *ClusterDMap) Function(ctx context.Context, key string, function string, arg []byte) ([]byte, error) {
+	rc, err := dm.clusterClient.smartPick(dm.name, key)
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := protocol.NewFunction(dm.name, key, function, arg).Command(ctx)
+	err = rc.Process(ctx, cmd)
+	if err != nil {
+		return nil, processProtocolError(err)
+	}
+	res, err := cmd.Bytes()
+	if err != nil {
+		return nil, processProtocolError(cmd.Err())
+	}
+	return res, nil
+}
+
 // IncrByFloat atomically increments the key by delta. The return value is the new value
 // after being incremented or an error.
 func (dm *ClusterDMap) IncrByFloat(ctx context.Context, key string, delta float64) (float64, error) {
@@ -692,6 +710,11 @@ func (cl *ClusterClient) NewDMap(name string, options ...DMapOption) (DMap, erro
 		client:        cl.client,
 		clusterClient: cl,
 	}, nil
+}
+
+// DeleteDMap deletes the DMap instance from the local process.
+func (e *ClusterClient) DeleteDMap(name string) error {
+	return nil
 }
 
 type ClusterClientOption func(c *clusterClientConfig)

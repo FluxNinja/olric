@@ -26,7 +26,7 @@ func (s *Service) delCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(delCmd.DMap)
+	dm, err := s.getDMap(delCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -47,13 +47,13 @@ func (s *Service) delEntryCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(delCmd.Del.DMap)
+	dm, err := s.getDMap(delCmd.Del.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
 	}
 
-	var kind = partitions.PRIMARY
+	kind := partitions.PRIMARY
 	if delCmd.Replica {
 		kind = partitions.BACKUP
 	}

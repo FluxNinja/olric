@@ -29,7 +29,7 @@ func (s *Service) unlockCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(unlockCmd.DMap)
+	dm, err := s.getDMap(unlockCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -56,13 +56,13 @@ func (s *Service) lockCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(lockCmd.DMap)
+	dm, err := s.getDMap(lockCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
 	}
 
-	var timeout = nilTimeout
+	timeout := nilTimeout
 	switch {
 	case lockCmd.EX != 0:
 		timeout = time.Duration(lockCmd.EX * float64(time.Second))
@@ -70,7 +70,7 @@ func (s *Service) lockCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		timeout = time.Duration(lockCmd.PX * int64(time.Millisecond))
 	}
 
-	var deadline = time.Duration(lockCmd.Deadline * float64(time.Second))
+	deadline := time.Duration(lockCmd.Deadline * float64(time.Second))
 	token, err := dm.Lock(s.ctx, lockCmd.Key, timeout, deadline)
 	if err != nil {
 		protocol.WriteError(conn, err)
@@ -87,7 +87,7 @@ func (s *Service) lockLeaseCommandHandler(conn redcon.Conn, cmd redcon.Command) 
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(lockLeaseCmd.DMap)
+	dm, err := s.getDMap(lockLeaseCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -114,7 +114,7 @@ func (s *Service) plockLeaseCommandHandler(conn redcon.Conn, cmd redcon.Command)
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(plockLeaseCmd.DMap)
+	dm, err := s.getDMap(plockLeaseCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

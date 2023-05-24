@@ -44,7 +44,7 @@ func (dm *DMap) isKeyIdleOnFragment(hkey uint64, f *fragment) bool {
 	if errors.Is(err, storage.ErrKeyNotFound) {
 		return false
 	}
-	//TODO: Handle other errors.
+	// TODO: Handle other errors.
 	ttl := (dm.config.maxIdleDuration.Nanoseconds() + lastAccess) / 1000000
 	return isKeyExpired(ttl)
 }
@@ -119,14 +119,22 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 
 	// We need limits to prevent CPU starvation. deleteOnCluster does some network operation
 	// to delete keys from the backup nodes and the previous owners.
-	var maxKeyCount = 20
-	var maxTotalCount = 100
-	var totalCount = 0
+	maxKeyCount := 20
+	maxTotalCount := 100
+	totalCount := 0
 
-	dm, err := s.getOrCreateDMap(name)
+	createdDMap := false
+
+	dm, err := s.getDMap(name)
 	if err != nil {
-		s.log.V(3).Printf("[ERROR] Failed to load DMap: %s: %v", name, err)
-		return
+		s.log.V(3).Printf("[WARN] Failed to load DMap: %s: %v", name, err)
+		// create a DMap and remove it later
+		dm, err = s.NewDMap(name)
+		if err != nil {
+			s.log.V(3).Printf("[ERROR] Failed to create DMap: %s: %v", name, err)
+			return
+		}
+		createdDMap = true
 	}
 
 	janitor := func() bool {
@@ -154,7 +162,7 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 				return true // continue
 			}
 
-			if isKeyExpired(ttl) || dm.isKeyIdleOnFragment(hkey, f) {
+			if isKeyExpired(ttl) || dm.isKeyIdleOnFragment(hkey, f) || createdDMap {
 				err = dm.deleteOnCluster(hkey, key, f)
 				if err != nil {
 					// It will be tried again.
@@ -168,6 +176,13 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 			}
 			return true
 		})
+
+		if createdDMap {
+			err := s.DeleteDMap(name)
+			if err != nil {
+				s.log.V(3).Printf("[ERROR] Failed to delete DMap: %s: %v", name, err)
+			}
+		}
 
 		totalCount += count
 		return count >= maxKeyCount/4
@@ -203,7 +218,7 @@ type lruItem struct {
 }
 
 func (dm *DMap) evictKeyWithLRU(e *env) error {
-	var idx = 1
+	idx := 1
 	var items []lruItem
 
 	// Warning: fragment is already locked by DMap.Put. Be sure about that before editing this function.

@@ -240,8 +240,8 @@ func (dm *EmbeddedDMap) Incr(ctx context.Context, key string, delta int) (int, e
 }
 
 // Function runs the given function on the owner of the given key.
-func (dm *EmbeddedDMap) Function(ctx context.Context, key string, functionName string, arg []byte) ([]byte, error) {
-	value, err := dm.dm.Function(ctx, key, functionName, arg)
+func (dm *EmbeddedDMap) Function(ctx context.Context, key string, function string, arg []byte) ([]byte, error) {
+	value, err := dm.dm.Function(ctx, key, function, arg)
 	if err != nil {
 		return nil, convertDMapError(err)
 	}
@@ -309,6 +309,11 @@ func (e *EmbeddedClient) NewDMap(name string, options ...DMapOption) (DMap, erro
 	}, nil
 }
 
+// DeleteDMap deletes the DMap instance from the local process.
+func (e *EmbeddedClient) DeleteDMap(name string) error {
+	return e.db.dmap.DeleteDMap(name)
+}
+
 // Stats exposes some useful metrics to monitor an Olric node.
 func (e *EmbeddedClient) Stats(ctx context.Context, address string, options ...StatsOption) (stats.Stats, error) {
 	if err := e.db.isOperable(); err != nil {
@@ -318,6 +323,10 @@ func (e *EmbeddedClient) Stats(ctx context.Context, address string, options ...S
 	var cfg statsConfig
 	for _, opt := range options {
 		opt(&cfg)
+	}
+
+	if address == "" {
+		address = e.db.rt.This().String()
 	}
 
 	if address == e.db.rt.This().String() {
