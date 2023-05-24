@@ -712,6 +712,11 @@ func (cl *ClusterClient) NewDMap(name string, options ...DMapOption) (DMap, erro
 	}, nil
 }
 
+// DeleteDMap deletes the DMap instance from the local process.
+func (cl *ClusterClient) DeleteDMap(name string) error {
+	return nil
+}
+
 type ClusterClientOption func(c *clusterClientConfig)
 
 type clusterClientConfig struct {
