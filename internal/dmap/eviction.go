@@ -123,10 +123,18 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 	maxTotalCount := 100
 	totalCount := 0
 
-	dm, err := s.getOrCreateDMap(name)
+	createdDMap := false
+
+	dm, err := s.getDMap(name)
 	if err != nil {
-		s.log.V(3).Printf("[ERROR] Failed to load DMap: %s: %v", name, err)
-		return
+		s.log.V(3).Printf("[WARN] Failed to load DMap: %s: %v", name, err)
+		// create a DMap and remove it later
+		dm, err = s.NewDMap(name)
+		if err != nil {
+			s.log.V(3).Printf("[ERROR] Failed to create DMap: %s: %v", name, err)
+			return
+		}
+		createdDMap = true
 	}
 
 	janitor := func() bool {
@@ -154,7 +162,7 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 				return true // continue
 			}
 
-			if isKeyExpired(ttl) || dm.isKeyIdleOnFragment(hkey, f) {
+			if isKeyExpired(ttl) || dm.isKeyIdleOnFragment(hkey, f) || createdDMap {
 				err = dm.deleteOnCluster(hkey, key, f)
 				if err != nil {
 					// It will be tried again.
@@ -168,6 +176,13 @@ func (s *Service) scanFragmentForEviction(partID uint64, name string, f *fragmen
 			}
 			return true
 		})
+
+		if createdDMap {
+			err := s.DeleteDMap(name)
+			if err != nil {
+				s.log.V(3).Printf("[ERROR] Failed to delete DMap: %s: %v", name, err)
+			}
+		}
 
 		totalCount += count
 		return count >= maxKeyCount/4

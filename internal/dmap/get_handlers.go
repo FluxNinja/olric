@@ -26,7 +26,7 @@ func (s *Service) getCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(getCmd.DMap)
+	dm, err := s.getDMap(getCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -51,7 +51,7 @@ func (s *Service) getEntryCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(getEntryCmd.DMap)
+	dm, err := s.getDMap(getEntryCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

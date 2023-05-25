@@ -38,7 +38,7 @@ func (dm *DMap) destroyFragmentOnPartition(part *partitions.Partition) error {
 func (s *Service) destroyLocalDMap(name string) error {
 	// This is very similar with rm -rf. Destroys given dmap on the cluster
 	for partID := uint64(0); partID < s.config.PartitionCount; partID++ {
-		dm, err := s.getOrCreateDMap(name)
+		dm, err := s.getDMap(name)
 		if errors.Is(err, ErrDMapNotFound) {
 			continue
 		}
@@ -76,7 +76,7 @@ func (s *Service) destroyCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(destroyCmd.DMap)
+	dm, err := s.getDMap(destroyCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

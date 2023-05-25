@@ -29,7 +29,7 @@ func (s *Service) unlockCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(unlockCmd.DMap)
+	dm, err := s.getDMap(unlockCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -56,7 +56,7 @@ func (s *Service) lockCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(lockCmd.DMap)
+	dm, err := s.getDMap(lockCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -87,7 +87,7 @@ func (s *Service) lockLeaseCommandHandler(conn redcon.Conn, cmd redcon.Command) 
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(lockLeaseCmd.DMap)
+	dm, err := s.getDMap(lockLeaseCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -114,7 +114,7 @@ func (s *Service) plockLeaseCommandHandler(conn redcon.Conn, cmd redcon.Command)
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(plockLeaseCmd.DMap)
+	dm, err := s.getDMap(plockLeaseCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

@@ -99,7 +99,7 @@ func (s *Service) scanCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(scanCmd.DMap)
+	dm, err := s.getDMap(scanCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return

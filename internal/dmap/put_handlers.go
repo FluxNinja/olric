@@ -28,7 +28,7 @@ func (s *Service) putCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
-	dm, err := s.getOrCreateDMap(putCmd.DMap)
+	dm, err := s.getDMap(putCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
@@ -74,7 +74,7 @@ func (s *Service) putEntryCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	dm, err := s.getOrCreateDMap(putEntryCmd.DMap)
+	dm, err := s.getDMap(putEntryCmd.DMap)
 	if err != nil {
 		protocol.WriteError(conn, err)
 		return
