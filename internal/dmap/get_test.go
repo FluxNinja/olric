@@ -16,23 +16,24 @@ package dmap
 
 import (
 	"context"
+	"testing"
+
 	"github.com/buraksezer/olric/internal/cluster/routingtable"
 	"github.com/buraksezer/olric/internal/testcluster"
 	"github.com/buraksezer/olric/internal/testutil"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDMap_Get_Standalone(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
-
-	ctx := context.Background()
-
+	s := cluster.AddMember(nil).(*Service)
 	// Call DMap.Put on S1
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	ctx := context.Background()
+
 	for i := 0; i < 10; i++ {
 		err = dm.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		require.NoError(t, err)
@@ -47,23 +48,23 @@ func TestDMap_Get_Standalone(t *testing.T) {
 
 func TestDMap_Get_Cluster(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
-	// Call DMap.Put on S1
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 	for i := 0; i < 10; i++ {
 		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		require.NoError(t, err)
 
 	}
 
-	// Call DMap.Get on S2
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
 	for i := 0; i < 10; i++ {
 		res, err := dm2.Get(ctx, testutil.ToKey(i))
 		require.NoError(t, err)
@@ -73,15 +74,16 @@ func TestDMap_Get_Cluster(t *testing.T) {
 
 func TestDMap_Get_Lookup(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	cluster.AddMember(nil)
 	defer cluster.Shutdown()
-
-	ctx := context.Background()
-
-	// Call DMap.Put on S1
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	for i := 0; i < 10; i++ {
 		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
@@ -89,7 +91,6 @@ func TestDMap_Get_Lookup(t *testing.T) {
 	}
 
 	s3 := cluster.AddMember(nil).(*Service)
-	// Call DMap.Get on S3
 	dm3, err := s3.NewDMap("mydmap")
 	require.NoError(t, err)
 
@@ -185,22 +186,23 @@ func TestDMap_Put_ReadQuorum(t *testing.T) {
 
 func TestDMap_Get_ReadRepair(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
+
 	c1 := testutil.NewConfig()
 	c1.ReadRepair = true
 	c1.ReplicaCount = 2
 	e1 := testcluster.NewEnvironment(c1)
+
 	s1 := cluster.AddMember(e1).(*Service)
+	dm1, err := s1.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	c2 := testutil.NewConfig()
 	c2.ReadRepair = true
 	c2.ReplicaCount = 2
 	e2 := testcluster.NewEnvironment(c2)
 	s2 := cluster.AddMember(e2).(*Service)
-
-	defer cluster.Shutdown()
-
-	// Call DMap.Put on S1
-	dm1, err := s1.NewDMap("mydmap")
+	_, err = s2.NewDMap("mydmap")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -220,14 +222,13 @@ func TestDMap_Get_ReadRepair(t *testing.T) {
 	c3.ReadRepair = true
 	c3.ReplicaCount = 2
 	e3 := testcluster.NewEnvironment(c3)
-	s3 := cluster.AddMember(e3).(*Service)
 
-	// Call DMap.Get on S2
-	dm2, err := s3.NewDMap("mydmap")
+	s3 := cluster.AddMember(e3).(*Service)
+	dm3, err := s3.NewDMap("mydmap")
 	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
-		gr, err := dm2.Get(ctx, testutil.ToKey(i))
+		gr, err := dm3.Get(ctx, testutil.ToKey(i))
 		require.NoError(t, err)
 		require.Equal(t, testutil.ToVal(i), gr.Value())
 	}

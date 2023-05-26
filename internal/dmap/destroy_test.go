@@ -26,11 +26,16 @@ import (
 
 func TestDMap_Destroy_Standalone(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
-	cluster.AddMember(nil)
 	defer cluster.Shutdown()
 
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mymap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mymap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
@@ -58,19 +63,23 @@ func TestDMap_Destroy_Standalone(t *testing.T) {
 
 func TestDMap_Destroy_Cluster(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
+
 	c1 := testutil.NewConfig()
 	c1.ReplicaCount = 2
 	e1 := testcluster.NewEnvironment(c1)
+
 	s := cluster.AddMember(e1).(*Service)
+	dm, err := s.NewDMap("mymap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
 
 	c2 := testutil.NewConfig()
 	c2.ReplicaCount = 2
 	e2 := testcluster.NewEnvironment(c2)
-	cluster.AddMember(e2)
-
-	defer cluster.Shutdown()
-
-	dm, err := s.NewDMap("mymap")
+	s2 := cluster.AddMember(e2).(*Service)
+	_, err = s2.NewDMap("mymap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
@@ -98,11 +107,16 @@ func TestDMap_Destroy_Cluster(t *testing.T) {
 
 func TestDMap_Destroy_destroyOperation(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
-	cluster.AddMember(nil)
 	defer cluster.Shutdown()
 
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mydmap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}

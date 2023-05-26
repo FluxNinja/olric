@@ -18,10 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/buraksezer/olric/internal/kvstore"
-	"github.com/buraksezer/olric/pkg/storage"
 	"testing"
 	"time"
+
+	"github.com/buraksezer/olric/internal/kvstore"
+	"github.com/buraksezer/olric/pkg/storage"
 
 	"github.com/buraksezer/olric/config"
 	"github.com/buraksezer/olric/internal/cluster/partitions"
@@ -73,20 +74,20 @@ func checkEmptyStorageEngine(t *testing.T, s *Service) {
 func TestDMap_Delete_Cluster(t *testing.T) {
 	cluster := testcluster.New(NewService)
 	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
-	defer cluster.Shutdown()
-
 	dm1, err := s1.NewDMap("mymap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mymap")
+	require.NoError(t, err)
+
+	defer cluster.Shutdown()
 
 	ctx := context.Background()
 	for i := 0; i < 10; i++ {
 		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		require.NoError(t, err)
 	}
-
-	dm2, err := s2.NewDMap("mymap")
-	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
 		_, err = dm2.Delete(ctx, testutil.ToKey(i))
@@ -99,11 +100,14 @@ func TestDMap_Delete_Cluster(t *testing.T) {
 
 func TestDMap_Delete_Lookup(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	cluster.AddMember(nil)
 	defer cluster.Shutdown()
 
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mymap")
+	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mymap")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -113,48 +117,46 @@ func TestDMap_Delete_Lookup(t *testing.T) {
 	}
 
 	s3 := cluster.AddMember(nil).(*Service)
-
-	dm2, err := s3.NewDMap("mymap")
+	dm3, err := s3.NewDMap("mymap")
 	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
-		_, err = dm2.Delete(ctx, testutil.ToKey(i))
+		_, err = dm3.Delete(ctx, testutil.ToKey(i))
 		require.NoError(t, err)
 
-		_, err = dm2.Get(ctx, testutil.ToKey(i))
+		_, err = dm3.Get(ctx, testutil.ToKey(i))
 		require.ErrorIs(t, err, ErrKeyNotFound)
 	}
 }
 
 func TestDMap_Delete_StaleFragments(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
+
 	c1 := testutil.NewConfig()
 	c1.DMaps.CheckEmptyFragmentsInterval = time.Millisecond
 	e1 := testcluster.NewEnvironment(c1)
 	s1 := cluster.AddMember(e1).(*Service)
+	dm1, err := s1.NewDMap("mymap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
 
 	c2 := testutil.NewConfig()
 	c2.DMaps.CheckEmptyFragmentsInterval = time.Millisecond
 	e2 := testcluster.NewEnvironment(c2)
 	s2 := cluster.AddMember(e2).(*Service)
-
-	defer cluster.Shutdown()
-
-	dm1, err := s1.NewDMap("mymap")
+	dm2, err := s2.NewDMap("mymap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
+
 	ctx := context.Background()
 	for i := 0; i < 100; i++ {
 		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		if err != nil {
 			t.Fatalf("Expected nil. Got: %v", err)
 		}
-	}
-
-	dm2, err := s2.NewDMap("mymap")
-	if err != nil {
-		t.Fatalf("Expected nil. Got: %v", err)
 	}
 
 	for i := 0; i < 100; i++ {
@@ -198,13 +200,14 @@ func TestDMap_Delete_StaleFragments(t *testing.T) {
 
 func TestDMap_Delete_PreviousOwner(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
+
 	err = dm.Put(context.Background(), "mykey", "myvalue", nil)
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
@@ -221,14 +224,20 @@ func TestDMap_Delete_PreviousOwner(t *testing.T) {
 
 func TestDMap_Delete_DeleteKeyValFromPreviousOwners(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
-	cluster.AddMember(nil)
 	defer cluster.Shutdown()
 
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mydmap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
+
 	err = dm.Put(context.Background(), "mykey", "myvalue", nil)
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
@@ -256,22 +265,26 @@ func TestDMap_Delete_DeleteKeyValFromPreviousOwners(t *testing.T) {
 
 func TestDMap_Delete_Backup(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
 
 	c1 := testutil.NewConfig()
 	c1.ReadRepair = true
 	c1.ReplicaCount = 2
 	e1 := testcluster.NewEnvironment(c1)
+
 	s1 := cluster.AddMember(e1).(*Service)
+	dm1, err := s1.NewDMap("mymap")
+	if err != nil {
+		t.Fatalf("Expected nil. Got: %v", err)
+	}
 
 	c2 := testutil.NewConfig()
 	c2.ReadRepair = true
 	c2.ReplicaCount = 2
 	e2 := testcluster.NewEnvironment(c2)
+
 	s2 := cluster.AddMember(e2).(*Service)
-
-	defer cluster.Shutdown()
-
-	dm1, err := s1.NewDMap("mymap")
+	dm2, err := s2.NewDMap("mymap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
@@ -282,11 +295,6 @@ func TestDMap_Delete_Backup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Expected nil. Got: %v", err)
 		}
-	}
-
-	dm2, err := s2.NewDMap("mymap")
-	if err != nil {
-		t.Fatalf("Expected nil. Got: %v", err)
 	}
 
 	for i := 0; i < 10; i++ {

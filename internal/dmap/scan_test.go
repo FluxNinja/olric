@@ -94,24 +94,27 @@ func TestDMap_scanCommandHandler_Standalone(t *testing.T) {
 
 func TestDMap_scanCommandHandler_Cluster(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
 
 	c1 := testutil.NewConfig()
 	c1.ReplicaCount = 2
 	c1.WriteQuorum = 2
 	e1 := testcluster.NewEnvironment(c1)
+
 	s1 := cluster.AddMember(e1).(*Service)
+	dm, err := s1.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	c2 := testutil.NewConfig()
 	c2.ReplicaCount = 2
 	c1.WriteQuorum = 2
 	e2 := testcluster.NewEnvironment(c2)
-	s2 := cluster.AddMember(e2).(*Service)
 
-	defer cluster.Shutdown()
+	s2 := cluster.AddMember(e2).(*Service)
+	_, err = s2.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	ctx := context.Background()
-	dm, err := s1.NewDMap("mydmap")
-	require.NoError(t, err)
 
 	allKeys := make(map[string]bool)
 	for i := 0; i < 100; i++ {
@@ -147,9 +150,9 @@ func TestDMap_scanCommandHandler_Cluster(t *testing.T) {
 
 func TestDMap_scanCommandHandler_match(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
 

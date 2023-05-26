@@ -27,11 +27,14 @@ import (
 
 func TestDMap_Eviction_TTL(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	dm, err := s1.NewDMap("mydmap")
+	s1 := cluster.AddMember(nil).(*Service)
+	dm1, err := s1.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	_, err = s2.NewDMap("mydmap")
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -40,7 +43,7 @@ func TestDMap_Eviction_TTL(t *testing.T) {
 		EX:    time.Millisecond,
 	}
 	for i := 0; i < 100; i++ {
-		err = dm.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), pc)
+		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), pc)
 		require.NoError(t, err)
 	}
 

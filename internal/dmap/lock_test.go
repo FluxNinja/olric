@@ -17,10 +17,11 @@ package dmap
 import (
 	"context"
 	"encoding/hex"
-	"github.com/buraksezer/olric/internal/protocol"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/buraksezer/olric/internal/protocol"
 
 	"github.com/buraksezer/olric/internal/testcluster"
 	"github.com/stretchr/testify/require"
@@ -294,12 +295,15 @@ func TestDMap_tryLock(t *testing.T) {
 
 func TestDMap_lockCommandHandler(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
+
+	s := cluster.AddMember(nil).(*Service)
+	_, err := s.NewDMap("lock.test")
+	require.NoError(t, err)
 
 	cmd := protocol.NewLock("lock.test", "lock.test.foo", 1).Command(s.ctx)
 	rc := s.client.Get(s.rt.This().String())
-	err := rc.Process(s.ctx, cmd)
+	err = rc.Process(s.ctx, cmd)
 	require.NoError(t, err)
 
 	token, err := cmd.Bytes()
@@ -315,12 +319,15 @@ func TestDMap_lockCommandHandler(t *testing.T) {
 
 func TestDMap_lockCommandHandler_EX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
+
+	s := cluster.AddMember(nil).(*Service)
+	_, err := s.NewDMap("lock.test")
+	require.NoError(t, err)
 
 	cmd := protocol.NewLock("lock.test", "lock.test.foo", 1).SetEX(1).Command(s.ctx)
 	rc := s.client.Get(s.rt.This().String())
-	err := rc.Process(s.ctx, cmd)
+	err = rc.Process(s.ctx, cmd)
 	require.NoError(t, err)
 
 	token, err := cmd.Bytes()
@@ -336,13 +343,16 @@ func TestDMap_lockCommandHandler_EX(t *testing.T) {
 
 func TestDMap_lockCommandHandler_PX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
+
+	s := cluster.AddMember(nil).(*Service)
+	_, err := s.NewDMap("lock.test")
+	require.NoError(t, err)
 
 	cmd := protocol.NewLock("lock.test", "lock.test.foo", 1).
 		SetPX((10 * time.Millisecond).Milliseconds()).Command(s.ctx)
 	rc := s.client.Get(s.rt.This().String())
-	err := rc.Process(s.ctx, cmd)
+	err = rc.Process(s.ctx, cmd)
 	require.NoError(t, err)
 
 	token, err := cmd.Bytes()
