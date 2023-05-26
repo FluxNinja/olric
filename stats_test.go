@@ -198,7 +198,7 @@ func TestStats_PubSub(t *testing.T) {
 
 func TestStats_DMap(t *testing.T) {
 	cluster := newTestOlricCluster(t)
-	db := cluster.addMember(t)
+	db := cluster.addMemberWithConfig(t, nil, "mydmap")
 
 	rc := redis.NewClient(&redis.Options{Addr: db.rt.This().String()})
 	ctx := context.Background()
