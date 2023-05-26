@@ -79,9 +79,19 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 		return nil, err
 	}
 
+	dm, err := s.NewTempDMap(name)
+	if err != nil {
+		return nil, err
+	}
 	s.Lock()
 	defer s.Unlock()
+	s.dmaps[name] = dm
+	return dm, nil
+}
 
+// NewTempDMap creates and returns a new DMap instance. It doesn't register it with the service.
+// It's used for temporary DMaps.
+func (s *Service) NewTempDMap(name string) (*DMap, error) {
 	dm := &DMap{
 		config:       &dmapConfig{},
 		name:         name,
@@ -94,7 +104,6 @@ func (s *Service) NewDMap(name string) (*DMap, error) {
 
 	// It's a shortcut.
 	dm.engine = dm.config.engine.Implementation
-	s.dmaps[name] = dm
 	return dm, nil
 }
 
