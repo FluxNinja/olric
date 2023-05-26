@@ -170,22 +170,6 @@ type DMap interface {
 	// of the argument after Delete returns.
 	Delete(ctx context.Context, keys ...string) (int, error)
 
-	// Incr atomically increments the key by delta. The return value is the new value
-	// after being incremented or an error.
-	Incr(ctx context.Context, key string, delta int) (int, error)
-
-	// Decr atomically decrements the key by delta. The return value is the new value
-	// after being decremented or an error.
-	Decr(ctx context.Context, key string, delta int) (int, error)
-
-	// GetPut atomically sets the key to value and returns the old value stored at key. It returns nil if there is no
-	// previous value.
-	GetPut(ctx context.Context, key string, value interface{}) (*GetResponse, error)
-
-	// IncrByFloat atomically increments the key by delta. The return value is the new value
-	// after being incremented or an error.
-	IncrByFloat(ctx context.Context, key string, delta float64) (float64, error)
-
 	// Expire updates the expiry for the given key. It returns ErrKeyNotFound if
 	// the DB does not contain the key. It's thread-safe.
 	Expire(ctx context.Context, key string, timeout time.Duration) error
@@ -212,43 +196,12 @@ type DMap interface {
 	// non-critical purposes.
 	LockWithTimeout(ctx context.Context, key string, timeout, deadline time.Duration) (LockContext, error)
 
-	// Scan returns an iterator to loop over the keys.
-	//
-	// Available scan options:
-	//
-	// * Count
-	// * Match
-	Scan(ctx context.Context, options ...ScanOption) (Iterator, error)
-
 	// Destroy flushes the given DMap on the cluster. You should know that there
 	// is no global lock on DMaps. So if you call Put/PutEx and Destroy methods
 	// concurrently on the cluster, Put call may set new values to the DMap.
 	Destroy(ctx context.Context) error
 
-	// Pipeline is a mechanism to realise Redis Pipeline technique.
-	//
-	// Pipelining is a technique to extremely speed up processing by packing
-	// operations to batches, send them at once to Redis and read a replies in a
-	// singe step.
-	// See https://redis.io/topics/pipelining
-	//
-	// Pay attention, that Pipeline is not a transaction, so you can get unexpected
-	// results in case of big pipelines and small read/write timeouts.
-	// Redis client has retransmission logic in case of timeouts, pipeline
-	// can be retransmitted and commands can be executed more than once.
-	Pipeline(opts ...PipelineOption) (*DMapPipeline, error)
-
 	Function(ctx context.Context, label string, function string, arg []byte) ([]byte, error)
-}
-
-// PipelineOption is a function for defining options to control behavior of the Pipeline command.
-type PipelineOption func(pipeline *DMapPipeline)
-
-// PipelineConcurrency is a PipelineOption controlling the number of concurrent goroutines.
-func PipelineConcurrency(concurrency int) PipelineOption {
-	return func(dp *DMapPipeline) {
-		dp.concurrency = concurrency
-	}
 }
 
 type statsConfig struct {

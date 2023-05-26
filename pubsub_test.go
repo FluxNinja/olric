@@ -84,8 +84,7 @@ func TestPubSub_Publish_Subscribe(t *testing.T) {
 	db := cluster.addMember(t)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -101,8 +100,7 @@ func TestPubSub_Publish_PSubscribe(t *testing.T) {
 	db := cluster.addMember(t)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -117,8 +115,7 @@ func TestPubSub_PubSubChannels(t *testing.T) {
 	db := cluster.addMember(t)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -147,8 +144,7 @@ func TestPubSub_PubSubNumSub(t *testing.T) {
 	db := cluster.addMember(t)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -181,8 +177,7 @@ func TestPubSub_PubSubNumPat(t *testing.T) {
 	db := cluster.addMember(t)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -212,8 +207,7 @@ func TestPubSub_Cluster(t *testing.T) {
 
 	// Create a subscriber
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db1.name})
-	require.NoError(t, err)
+	c := db1.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()

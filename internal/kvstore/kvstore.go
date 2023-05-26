@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*Package kvstore implements a GC friendly in-memory storage engine by using
-built-in maps and byte slices. It also supports compaction.*/
+/*
+Package kvstore implements a GC friendly in-memory storage engine by using
+built-in maps and byte slices. It also supports compaction.
+*/
 package kvstore
 
 import (
@@ -123,27 +125,27 @@ func requiredSizeForAnEntry(e storage.Entry) uint64 {
 }
 
 func prepareTableSize(raw interface{}) (size uint64, err error) {
-	switch raw.(type) {
+	switch raw := raw.(type) {
 	case uint:
-		size = uint64(raw.(uint))
+		size = uint64(raw)
 	case uint8:
-		size = uint64(raw.(uint8))
+		size = uint64(raw)
 	case uint16:
-		size = uint64(raw.(uint16))
+		size = uint64(raw)
 	case uint32:
-		size = uint64(raw.(uint32))
+		size = uint64(raw)
 	case uint64:
-		size = raw.(uint64)
+		size = raw
 	case int:
-		size = uint64(raw.(int))
+		size = uint64(raw)
 	case int8:
-		size = uint64(raw.(int8))
+		size = uint64(raw)
 	case int16:
-		size = uint64(raw.(int16))
+		size = uint64(raw)
 	case int32:
-		size = uint64(raw.(int32))
+		size = uint64(raw)
 	case int64:
-		size = uint64(raw.(int64))
+		size = uint64(raw)
 	default:
 		err = fmt.Errorf("invalid type for tableSize: %s", reflect.TypeOf(raw))
 		return
@@ -452,7 +454,7 @@ func (k *KVStore) RangeHKey(f func(hkey uint64) bool) {
 
 func (k *KVStore) findCoefficient(coefficient uint64) (uint64, error) {
 	var sortedCoefficients []uint64
-	for newCf, _ := range k.tablesByCoefficient {
+	for newCf := range k.tablesByCoefficient {
 		sortedCoefficients = append(sortedCoefficients, newCf)
 	}
 	sort.Slice(sortedCoefficients, func(i, j int) bool { return sortedCoefficients[i] < sortedCoefficients[j] })
@@ -482,7 +484,7 @@ func (k *KVStore) scanCommon(cursor uint64, expr string, count int, f func(e sto
 		cursor = cf * k.tableSize
 	}
 
-	var tableCursor = cursor
+	tableCursor := cursor
 	if cf > 0 {
 		tableCursor = cursor - (k.tableSize * cf)
 	}

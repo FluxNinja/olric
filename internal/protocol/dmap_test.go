@@ -364,69 +364,6 @@ func TestProtocol_Destroy_Local(t *testing.T) {
 	require.True(t, parsed.Local)
 }
 
-func TestProtocol_Incr(t *testing.T) {
-	incrCmd := NewIncr("my-dmap", "my-key", 7)
-
-	cmd := stringToCommand(incrCmd.Command(context.Background()).String())
-	parsed, err := ParseIncrCommand(cmd)
-	require.NoError(t, err)
-
-	require.Equal(t, "my-dmap", parsed.DMap)
-	require.Equal(t, "my-key", parsed.Key)
-	require.Equal(t, 7, parsed.Delta)
-}
-
-func TestProtocol_Decr(t *testing.T) {
-	decrCmd := NewDecr("my-dmap", "my-key", 7)
-
-	cmd := stringToCommand(decrCmd.Command(context.Background()).String())
-	parsed, err := ParseDecrCommand(cmd)
-	require.NoError(t, err)
-
-	require.Equal(t, "my-dmap", parsed.DMap)
-	require.Equal(t, "my-key", parsed.Key)
-	require.Equal(t, 7, parsed.Delta)
-}
-
-func TestProtocol_GetPut(t *testing.T) {
-	getputCmd := NewGetPut("my-dmap", "my-key", []byte("my-value"))
-
-	cmd := stringToCommand(getputCmd.Command(context.Background()).String())
-	parsed, err := ParseGetPutCommand(cmd)
-	require.NoError(t, err)
-
-	require.Equal(t, "my-dmap", parsed.DMap)
-	require.Equal(t, "my-key", parsed.Key)
-	require.Equal(t, []byte("my-value"), parsed.Value)
-	require.False(t, parsed.Raw)
-}
-
-func TestProtocol_GetPut_RW(t *testing.T) {
-	getputCmd := NewGetPut("my-dmap", "my-key", []byte("my-value"))
-	getputCmd.SetRaw()
-
-	cmd := stringToCommand(getputCmd.Command(context.Background()).String())
-	parsed, err := ParseGetPutCommand(cmd)
-	require.NoError(t, err)
-
-	require.Equal(t, "my-dmap", parsed.DMap)
-	require.Equal(t, "my-key", parsed.Key)
-	require.Equal(t, []byte("my-value"), parsed.Value)
-	require.True(t, parsed.Raw)
-}
-
-func TestProtocol_IncrByFloat(t *testing.T) {
-	incrByFloatCmd := NewIncrByFloat("my-dmap", "my-key", 3.14159265359)
-
-	cmd := stringToCommand(incrByFloatCmd.Command(context.Background()).String())
-	parsed, err := ParseIncrByFloatCommand(cmd)
-	require.NoError(t, err)
-
-	require.Equal(t, "my-dmap", parsed.DMap)
-	require.Equal(t, "my-key", parsed.Key)
-	require.Equal(t, 3.14159265359, parsed.Delta)
-}
-
 func TestProtocol_Lock(t *testing.T) {
 	lockCmd := NewLock("my-dmap", "my-key", 7)
 

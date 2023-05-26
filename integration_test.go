@@ -42,15 +42,14 @@ func TestIntegration_NodesJoinOrLeftDuringQuery(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
-	db2 := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+	db2 := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	t.Log("Wait for 1 second before inserting keys")
 	<-time.After(time.Second)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -62,11 +61,11 @@ func TestIntegration_NodesJoinOrLeftDuringQuery(t *testing.T) {
 		err = dm.Put(ctx, fmt.Sprintf("mykey-%d", i), "myvalue")
 		require.NoError(t, err)
 		if i == 5999 {
-			go cluster.addMemberWithConfig(t, newConfig())
+			go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 		}
 	}
 
-	go cluster.addMemberWithConfig(t, newConfig())
+	go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	t.Log("Fetch all keys")
 
@@ -80,13 +79,10 @@ func TestIntegration_NodesJoinOrLeftDuringQuery(t *testing.T) {
 		}
 		require.NoError(t, err)
 		if i == 5999 {
-			err = c.client.Close(db2.name)
-			require.NoError(t, err)
-
 			t.Logf("Shutdown one of the nodes: %s", db2.name)
 			require.NoError(t, db2.Shutdown(ctx))
 
-			go cluster.addMemberWithConfig(t, newConfig())
+			go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 			t.Log("Wait for \"NodeLeave\" event propagation")
 			<-time.After(time.Second)
@@ -117,11 +113,10 @@ func TestIntegration_DMap_Cache_Eviction_LRU_MaxKeys(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -165,11 +160,10 @@ func TestIntegration_DMap_Cache_Eviction_MaxKeys(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -221,11 +215,10 @@ func TestIntegration_DMap_Cache_Eviction_MaxIdleDuration(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -270,11 +263,10 @@ func TestIntegration_DMap_Cache_Eviction_TTLDuration(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -320,11 +312,10 @@ func TestIntegration_DMap_Cache_Eviction_LRU_MaxInuse(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
@@ -368,24 +359,21 @@ func TestIntegration_Kill_Nodes_During_Operation(t *testing.T) {
 
 	cluster := newTestOlricCluster(t)
 
-	db := cluster.addMemberWithConfig(t, newConfig())
+	db := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
-	cluster.addMemberWithConfig(t, newConfig())
-	db3 := cluster.addMemberWithConfig(t, newConfig())
-	cluster.addMemberWithConfig(t, newConfig())
-	db5 := cluster.addMemberWithConfig(t, newConfig())
+	cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+	db3 := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+	cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+	db5 := cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	t.Log("Wait for 1 second before inserting keys")
 	<-time.After(time.Second)
 
 	ctx := context.Background()
-	c, err := NewClusterClient([]string{db.name})
-	require.NoError(t, err)
+	c := db.NewEmbeddedClient()
 	defer func() {
 		require.NoError(t, c.Close(ctx))
 	}()
-
-	require.NoError(t, err)
 
 	dm, err := c.NewDMap("mydmap")
 	require.NoError(t, err)
@@ -425,137 +413,4 @@ func TestIntegration_Kill_Nodes_During_Operation(t *testing.T) {
 		}
 		require.NoError(t, err)
 	}
-}
-
-func scanIntegrationTestCommon(t *testing.T, embedded bool, keyFunc func(i int) string, options ...ScanOption) []map[string]struct{} {
-	newConfig := func() *config.Config {
-		c := config.New("local")
-		c.PartitionCount = config.DefaultPartitionCount
-		c.ReplicaCount = 2
-		c.WriteQuorum = 1
-		c.ReadRepair = false
-		c.ReadQuorum = 1
-		c.LogOutput = io.Discard
-		c.TriggerBalancerInterval = time.Millisecond
-		require.NoError(t, c.Sanitize())
-		require.NoError(t, c.Validate())
-		return c
-	}
-
-	cluster := newTestOlricCluster(t)
-
-	db := cluster.addMemberWithConfig(t, newConfig())
-	db2 := cluster.addMemberWithConfig(t, newConfig())
-	_ = cluster.addMemberWithConfig(t, newConfig())
-
-	t.Log("Wait for 1 second before inserting keys")
-	<-time.After(time.Second)
-
-	ctx := context.Background()
-	var c Client
-	var err error
-
-	if embedded {
-		c = db.NewEmbeddedClient()
-	} else {
-		c, err = NewClusterClient([]string{db.name})
-		require.NoError(t, err)
-	}
-
-	defer func() {
-		require.NoError(t, c.Close(ctx))
-	}()
-
-	dm, err := c.NewDMap("mydmap")
-	require.NoError(t, err)
-
-	passOne := make(map[string]struct{})
-	passTwo := make(map[string]struct{})
-	for i := 0; i < 10000; i++ {
-		key := keyFunc(i)
-		err = dm.Put(ctx, key, "myvalue")
-		require.NoError(t, err)
-		passOne[key] = struct{}{}
-		passTwo[key] = struct{}{}
-	}
-
-	t.Logf("Shutdown one of the nodes: %s", db2.name)
-	require.NoError(t, db2.Shutdown(ctx))
-
-	t.Log("Wait for \"NodeLeave\" event propagation")
-	<-time.After(time.Second)
-
-	t.Log("First pass")
-
-	s, err := dm.Scan(context.Background(), options...)
-	require.NoError(t, err)
-	for s.Next() {
-		delete(passOne, s.Key())
-	}
-	s.Close()
-
-	db3 := cluster.addMemberWithConfig(t, newConfig())
-	t.Logf("Add a new member: %s", db3.rt.This())
-
-	<-time.After(time.Second)
-
-	t.Log("Second pass")
-	s, err = dm.Scan(context.Background(), options...)
-	require.NoError(t, err)
-
-	for s.Next() {
-		delete(passTwo, s.Key())
-	}
-
-	return []map[string]struct{}{passOne, passTwo}
-}
-
-func TestIntegration_Network_Partitioning_Cluster_DM_SCAN(t *testing.T) {
-	keyGenerator := func(i int) string {
-		return fmt.Sprintf("mykey-%d", i)
-	}
-	result := scanIntegrationTestCommon(t, false, keyGenerator)
-	passOne, passTwo := result[0], result[1]
-	require.Empty(t, passOne)
-	require.Empty(t, passTwo)
-}
-
-func TestIntegration_Network_Partitioning_Cluster_DM_SCAN_Match(t *testing.T) {
-	var oddNumbers int
-	keyGenerator := func(i int) string {
-		if i%2 == 0 {
-			return fmt.Sprintf("even:%d", i)
-		}
-		oddNumbers++
-		return fmt.Sprintf("odd:%d", i)
-	}
-	result := scanIntegrationTestCommon(t, false, keyGenerator, Match("^even:"))
-	passOne, passTwo := result[0], result[1]
-	require.Len(t, passOne, oddNumbers)
-	require.Len(t, passTwo, oddNumbers)
-}
-
-func TestIntegration_Network_Partitioning_Embedded_DM_SCAN(t *testing.T) {
-	keyGenerator := func(i int) string {
-		return fmt.Sprintf("mykey-%d", i)
-	}
-	result := scanIntegrationTestCommon(t, true, keyGenerator)
-	passOne, passTwo := result[0], result[1]
-	require.Empty(t, passOne)
-	require.Empty(t, passTwo)
-}
-
-func TestIntegration_Network_Partitioning_Embedded_DM_SCAN_Match(t *testing.T) {
-	var oddNumbers int
-	keyGenerator := func(i int) string {
-		if i%2 == 0 {
-			return fmt.Sprintf("even:%d", i)
-		}
-		oddNumbers++
-		return fmt.Sprintf("odd:%d", i)
-	}
-	result := scanIntegrationTestCommon(t, true, keyGenerator, Match("^even:"))
-	passOne, passTwo := result[0], result[1]
-	require.Len(t, passOne, oddNumbers)
-	require.Len(t, passTwo, oddNumbers)
 }

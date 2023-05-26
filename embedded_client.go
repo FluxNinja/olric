@@ -17,7 +17,11 @@ package olric
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/buraksezer/olric/internal/discovery"
@@ -25,7 +29,22 @@ import (
 	"github.com/buraksezer/olric/internal/protocol"
 	"github.com/buraksezer/olric/internal/util"
 	"github.com/buraksezer/olric/stats"
+	"github.com/go-redis/redis/v8"
 )
+
+func processProtocolError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if err == redis.Nil {
+		return ErrKeyNotFound
+	}
+	if errors.Is(err, syscall.ECONNREFUSED) {
+		opErr := err.(*net.OpError)
+		return fmt.Errorf("%s %s %s: %w", opErr.Op, opErr.Net, opErr.Addr, ErrConnRefused)
+	}
+	return convertDMapError(protocol.ConvertError(err))
+}
 
 // EmbeddedLockContext is returned by Lock and LockWithTimeout methods.
 // It should be stored in a proper way to release the lock.
@@ -54,66 +73,12 @@ type EmbeddedClient struct {
 
 // EmbeddedDMap is an DMap client implementation for embedded-member scenario.
 type EmbeddedDMap struct {
-	mtx           sync.RWMutex
-	clusterClient *ClusterClient
-	config        *dmapConfig
-	member        discovery.Member
-	dm            *dmap.DMap
-	client        *EmbeddedClient
-	name          string
-}
-
-func (dm *EmbeddedDMap) setOrGetClusterClient() (Client, error) {
-	// Acquire the read lock and try to access the cluster client, if any.
-	dm.mtx.RLock()
-	if dm.clusterClient != nil {
-		dm.mtx.RUnlock()
-		return dm.clusterClient, nil
-	}
-	dm.mtx.RUnlock()
-
-	// The cluster client is unset, try to create a new one.
-	dm.mtx.Lock()
-	defer dm.mtx.Unlock()
-
-	// Check the existing value last time. There can be another running instances
-	// of this function.
-	if dm.clusterClient != nil {
-		return dm.clusterClient, nil
-	}
-
-	// Create a new cluster client here.
-	c, err := NewClusterClient([]string{dm.client.db.rt.This().String()})
-	if err != nil {
-		return nil, err
-	}
-	dm.clusterClient = c
-
-	return dm.clusterClient, nil
-}
-
-// Pipeline is a mechanism to realise Redis Pipeline technique.
-//
-// Pipelining is a technique to extremely speed up processing by packing
-// operations to batches, send them at once to Redis and read a replies in a
-// singe step.
-// See https://redis.io/topics/pipelining
-//
-// Pay attention, that Pipeline is not a transaction, so you can get unexpected
-// results in case of big pipelines and small read/write timeouts.
-// Redis client has retransmission logic in case of timeouts, pipeline
-// can be retransmitted and commands can be executed more than once.
-func (dm *EmbeddedDMap) Pipeline(opts ...PipelineOption) (*DMapPipeline, error) {
-	cc, err := dm.setOrGetClusterClient()
-	if err != nil {
-		return nil, err
-	}
-
-	clusterDMap, err := cc.NewDMap(dm.name)
-	if err != nil {
-		return nil, err
-	}
-	return clusterDMap.Pipeline(opts...)
+	mtx    sync.RWMutex
+	config *dmapConfig
+	member discovery.Member
+	dm     *dmap.DMap
+	client *EmbeddedClient
+	name   string
 }
 
 // RefreshMetadata fetches a list of available members and the latest routing
@@ -122,37 +87,6 @@ func (dm *EmbeddedDMap) Pipeline(opts ...PipelineOption) (*DMapPipeline, error) 
 func (e *EmbeddedClient) RefreshMetadata(_ context.Context) error {
 	// EmbeddedClient already has the latest metadata.
 	return nil
-}
-
-// Scan returns an iterator to loop over the keys.
-//
-// Available scan options:
-//
-// * Count
-// * Match
-func (dm *EmbeddedDMap) Scan(ctx context.Context, options ...ScanOption) (Iterator, error) {
-	cc, err := NewClusterClient([]string{dm.client.db.rt.This().String()})
-	if err != nil {
-		return nil, err
-	}
-	cdm, err := cc.NewDMap(dm.name)
-	if err != nil {
-		return nil, err
-	}
-	i, err := cdm.Scan(ctx, options...)
-	if err != nil {
-		return nil, err
-	}
-
-	e := &EmbeddedIterator{
-		client: dm.client,
-		dm:     dm.dm,
-	}
-
-	clusterIterator := i.(*ClusterIterator)
-	clusterIterator.scanner = e.scanOnOwners
-	e.clusterIterator = clusterIterator
-	return e, nil
 }
 
 // Lock sets a lock for the given key. Acquired lock is only for the key in
@@ -215,38 +149,9 @@ func (dm *EmbeddedDMap) Name() string {
 	return dm.name
 }
 
-// GetPut atomically sets the key to value and returns the old value stored at key. It returns nil if there is no
-// previous value.
-func (dm *EmbeddedDMap) GetPut(ctx context.Context, key string, value interface{}) (*GetResponse, error) {
-	e, err := dm.dm.GetPut(ctx, key, value)
-	if err != nil {
-		return nil, err
-	}
-	return &GetResponse{
-		entry: e,
-	}, nil
-}
-
-// Decr atomically decrements the key by delta. The return value is the new value
-// after being decremented or an error.
-func (dm *EmbeddedDMap) Decr(ctx context.Context, key string, delta int) (int, error) {
-	return dm.dm.Decr(ctx, key, delta)
-}
-
-// Incr atomically increments the key by delta. The return value is the new value
-// after being incremented or an error.
-func (dm *EmbeddedDMap) Incr(ctx context.Context, key string, delta int) (int, error) {
-	return dm.dm.Incr(ctx, key, delta)
-}
-
 // Function runs the given function on the owner of the given key.
 func (dm *EmbeddedDMap) Function(ctx context.Context, key string, function string, arg []byte) ([]byte, error) {
 	return dm.dm.Function(ctx, key, function, arg)
-}
-
-// IncrByFloat atomically increments the key by delta. The return value is the new value after being incremented or an error.
-func (dm *EmbeddedDMap) IncrByFloat(ctx context.Context, key string, delta float64) (float64, error) {
-	return dm.dm.IncrByFloat(ctx, key, delta)
 }
 
 // Delete deletes values for the given keys. Delete will not return error

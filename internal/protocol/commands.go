@@ -50,48 +50,40 @@ var Generic = &GenericCommands{
 }
 
 type DMapCommands struct {
-	Get         string
-	GetEntry    string
-	Put         string
-	PutEntry    string
-	Del         string
-	DelEntry    string
-	Expire      string
-	PExpire     string
-	Destroy     string
-	Query       string
-	Incr        string
-	Decr        string
-	GetPut      string
-	IncrByFloat string
-	Lock        string
-	Unlock      string
-	LockLease   string
-	PLockLease  string
-	Scan        string
-	Function    string
+	Get        string
+	GetEntry   string
+	Put        string
+	PutEntry   string
+	Del        string
+	DelEntry   string
+	Expire     string
+	PExpire    string
+	Destroy    string
+	Query      string
+	Lock       string
+	Unlock     string
+	LockLease  string
+	PLockLease string
+	Scan       string
+	Function   string
 }
 
 var DMap = &DMapCommands{
-	Get:         "dm.get",
-	GetEntry:    "dm.getentry",
-	Put:         "dm.put",
-	PutEntry:    "dm.putentry",
-	Del:         "dm.del",
-	DelEntry:    "dm.delentry",
-	Expire:      "dm.expire",
-	PExpire:     "dm.pexpire",
-	Destroy:     "dm.destroy",
-	Incr:        "dm.incr",
-	Decr:        "dm.decr",
-	GetPut:      "dm.getput",
-	IncrByFloat: "dm.incrbyfloat",
-	Lock:        "dm.lock",
-	Unlock:      "dm.unlock",
-	LockLease:   "dm.locklease",
-	PLockLease:  "dm.plocklease",
-	Scan:        "dm.scan",
-	Function:    "dm.function",
+	Get:        "dm.get",
+	GetEntry:   "dm.getentry",
+	Put:        "dm.put",
+	PutEntry:   "dm.putentry",
+	Del:        "dm.del",
+	DelEntry:   "dm.delentry",
+	Expire:     "dm.expire",
+	PExpire:    "dm.pexpire",
+	Destroy:    "dm.destroy",
+	Lock:       "dm.lock",
+	Unlock:     "dm.unlock",
+	LockLease:  "dm.locklease",
+	PLockLease: "dm.plocklease",
+	Scan:       "dm.scan",
+	Function:   "dm.function",
 }
 
 type PubSubCommands struct {

@@ -93,7 +93,7 @@ func newTestOlricCluster(t *testing.T) *testOlricCluster {
 	return cl
 }
 
-func (cl *testOlricCluster) addMemberWithConfig(t *testing.T, c *config.Config) *Olric {
+func (cl *testOlricCluster) addMemberWithConfig(t *testing.T, c *config.Config, dMapName string) *Olric {
 	cl.mtx.Lock()
 	defer cl.mtx.Unlock()
 
@@ -108,11 +108,15 @@ func (cl *testOlricCluster) addMemberWithConfig(t *testing.T, c *config.Config) 
 	db := newTestOlricWithConfig(t, c)
 	cl.members[db.rt.This().String()] = db
 	t.Logf("A new cluster member has been created: %s", db.rt.This())
+	if dMapName != "" {
+		client := db.NewEmbeddedClient()
+		_, _ = client.NewDMap(dMapName)
+	}
 	return db
 }
 
 func (cl *testOlricCluster) addMember(t *testing.T) *Olric {
-	return cl.addMemberWithConfig(t, nil)
+	return cl.addMemberWithConfig(t, nil, "")
 }
 
 func TestOlric_StartAndShutdown(t *testing.T) {

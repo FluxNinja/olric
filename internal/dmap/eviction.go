@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"runtime"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/buraksezer/olric/internal/cluster/partitions"
@@ -103,7 +104,7 @@ func (s *Service) evictKeys() {
 	part := s.primary.PartitionByID(partID)
 	part.Map().Range(func(name, tmp interface{}) bool {
 		f := tmp.(*fragment)
-		s.scanFragmentForEviction(partID, name.(string), f)
+		s.scanFragmentForEviction(partID, strings.TrimPrefix(name.(string), "dmap."), f)
 		// this breaks the loop, we only scan one dmap instance per call
 		return false
 	})

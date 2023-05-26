@@ -22,7 +22,6 @@ import (
 
 	"github.com/buraksezer/olric/internal/testutil"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 )
 
 func TestEmbeddedClient_NewDMap(t *testing.T) {
@@ -206,103 +205,6 @@ func TestEmbeddedClient_DMap_Delete_Many_Keys(t *testing.T) {
 	count, err := dm.Delete(context.Background(), keys...)
 	require.NoError(t, err)
 	require.Equal(t, 10, count)
-}
-
-func TestEmbeddedClient_DMap_Atomic_Incr(t *testing.T) {
-	cluster := newTestOlricCluster(t)
-	db := cluster.addMember(t)
-
-	e := db.NewEmbeddedClient()
-	dm, err := e.NewDMap("mydmap")
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	var errGr errgroup.Group
-	for i := 0; i < 100; i++ {
-		errGr.Go(func() error {
-			_, err = dm.Incr(ctx, "mykey", 1)
-			return err
-		})
-	}
-	require.NoError(t, errGr.Wait())
-
-	gr, err := dm.Get(context.Background(), "mykey")
-	res, err := gr.Int()
-	require.NoError(t, err)
-	require.Equal(t, 100, res)
-}
-
-func TestEmbeddedClient_DMap_Atomic_Decr(t *testing.T) {
-	cluster := newTestOlricCluster(t)
-	db := cluster.addMember(t)
-
-	e := db.NewEmbeddedClient()
-	dm, err := e.NewDMap("mydmap")
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	err = dm.Put(ctx, "mykey", 100)
-	require.NoError(t, err)
-
-	var errGr errgroup.Group
-	for i := 0; i < 100; i++ {
-		errGr.Go(func() error {
-			_, err = dm.Decr(ctx, "mykey", 1)
-			return err
-		})
-	}
-	require.NoError(t, errGr.Wait())
-
-	gr, err := dm.Get(context.Background(), "mykey")
-	res, err := gr.Int()
-	require.NoError(t, err)
-	require.Equal(t, 0, res)
-}
-
-func TestEmbeddedClient_DMap_GetPut(t *testing.T) {
-	cluster := newTestOlricCluster(t)
-	db := cluster.addMember(t)
-
-	e := db.NewEmbeddedClient()
-	dm, err := e.NewDMap("mydmap")
-	require.NoError(t, err)
-
-	gr, err := dm.GetPut(context.Background(), "mykey", "myvalue")
-	require.NoError(t, err)
-
-	_, err = gr.String()
-	require.ErrorIs(t, err, ErrNilResponse)
-
-	gr, err = dm.GetPut(context.Background(), "mykey", "myvalue-2")
-	require.NoError(t, err)
-
-	value, err := gr.String()
-	require.NoError(t, err)
-	require.Equal(t, "myvalue", value)
-}
-
-func TestEmbeddedClient_DMap_Atomic_IncrByFloat(t *testing.T) {
-	cluster := newTestOlricCluster(t)
-	db := cluster.addMember(t)
-
-	e := db.NewEmbeddedClient()
-	dm, err := e.NewDMap("mydmap")
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	var errGr errgroup.Group
-	for i := 0; i < 100; i++ {
-		errGr.Go(func() error {
-			_, err = dm.IncrByFloat(ctx, "mykey", 1.2)
-			return err
-		})
-	}
-	require.NoError(t, errGr.Wait())
-
-	gr, err := dm.Get(context.Background(), "mykey")
-	res, err := gr.Float64()
-	require.NoError(t, err)
-	require.Equal(t, 120.0000000000002, res)
 }
 
 func TestEmbeddedClient_DMap_Expire(t *testing.T) {
