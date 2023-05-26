@@ -41,7 +41,7 @@ func TestDMap_Stats(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	//GetHits
+	// GetHits
 	for i := 0; i < 10; i++ {
 		_, err = dm.Get(ctx, testutil.ToKey(i))
 		require.NoError(t, err)

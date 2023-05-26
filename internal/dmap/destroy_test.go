@@ -110,24 +110,25 @@ func TestDMap_Destroy_destroyOperation(t *testing.T) {
 	defer cluster.Shutdown()
 
 	s := cluster.AddMember(nil).(*Service)
-	dm, err := s.NewDMap("mydmap")
+	dm1, err := s.NewDMap("mydmap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
 
 	s2 := cluster.AddMember(nil).(*Service)
-	_, err = s2.NewDMap("mydmap")
+	dm2, err := s2.NewDMap("mydmap")
 	if err != nil {
 		t.Fatalf("Expected nil. Got: %v", err)
 	}
 
 	ctx := context.Background()
 	for i := 0; i < 100; i++ {
-		err = dm.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
+		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		if err != nil {
 			t.Fatalf("Expected nil. Got: %v", err)
 		}
 	}
+
 	cmd := protocol.NewDestroy("mydmap").Command(s.ctx)
 	rc := s.client.Get(s.rt.This().String())
 	err = rc.Process(s.ctx, cmd)
@@ -135,7 +136,7 @@ func TestDMap_Destroy_destroyOperation(t *testing.T) {
 	require.NoError(t, cmd.Err())
 
 	for i := 0; i < 100; i++ {
-		_, err = dm.Get(ctx, testutil.ToKey(i))
+		_, err = dm2.Get(ctx, testutil.ToKey(i))
 		require.ErrorIs(t, err, ErrKeyNotFound)
 	}
 }

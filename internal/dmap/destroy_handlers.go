@@ -92,5 +92,6 @@ func (s *Service) destroyCommandHandler(conn redcon.Conn, cmd redcon.Command) {
 		protocol.WriteError(conn, err)
 		return
 	}
+
 	conn.WriteString(protocol.StatusOK)
 }

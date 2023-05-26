@@ -52,22 +52,22 @@ func TestDMap_Put_Standalone(t *testing.T) {
 
 func TestDMap_Put_Cluster(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
-
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	for i := 0; i < 10; i++ {
 		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		require.NoError(t, err)
 	}
-
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
 		gr, err := dm2.Get(ctx, testutil.ToKey(i))
@@ -78,33 +78,32 @@ func TestDMap_Put_Cluster(t *testing.T) {
 
 func TestDMap_Put_AsyncReplicationMode(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
+
 	// Create DMap services with custom configuration
 	c1 := testutil.NewConfig()
 	c1.ReplicationMode = config.AsyncReplicationMode
 	e1 := testcluster.NewEnvironment(c1)
 	s1 := cluster.AddMember(e1).(*Service)
+	dm1, err := s1.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	c2 := testutil.NewConfig()
 	c2.ReplicationMode = config.AsyncReplicationMode
 	e2 := testcluster.NewEnvironment(c2)
 	s2 := cluster.AddMember(e2).(*Service)
-	defer cluster.Shutdown()
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	ctx := context.Background()
 
-	dm, err := s1.NewDMap("mydmap")
-	require.NoError(t, err)
-
 	for i := 0; i < 10; i++ {
-		err = dm.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
+		err = dm1.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
 		require.NoError(t, err)
 	}
 
 	// Wait some time for async replication
 	<-time.After(100 * time.Millisecond)
-
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
 		gr, err := dm2.Get(ctx, testutil.ToKey(i))
@@ -115,18 +114,20 @@ func TestDMap_Put_AsyncReplicationMode(t *testing.T) {
 
 func TestDMap_Put_WriteQuorum(t *testing.T) {
 	cluster := testcluster.New(NewService)
+	defer cluster.Shutdown()
+
 	// Create DMap services with custom configuration
 	c1 := testutil.NewConfig()
 	c1.ReplicaCount = 2
 	c1.WriteQuorum = 2
 	e1 := testcluster.NewEnvironment(c1)
+
 	s1 := cluster.AddMember(e1).(*Service)
-	defer cluster.Shutdown()
+	dm, err := s1.NewDMap("mydmap")
+	require.NoError(t, err)
 
 	ctx := context.Background()
 	var hit bool
-	dm, err := s1.NewDMap("mydmap")
-	require.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
 		key := testutil.ToKey(i)
@@ -148,13 +149,17 @@ func TestDMap_Put_WriteQuorum(t *testing.T) {
 
 func TestDMap_Put_PX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	pc := &PutConfig{
 		HasPX: true,
@@ -167,9 +172,6 @@ func TestDMap_Put_PX(t *testing.T) {
 
 	<-time.After(10 * time.Millisecond)
 
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
-
 	for i := 0; i < 10; i++ {
 		_, err := dm2.Get(ctx, testutil.ToKey(i))
 		if err != ErrKeyNotFound {
@@ -180,12 +182,13 @@ func TestDMap_Put_PX(t *testing.T) {
 
 func TestDMap_Put_NX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	for i := 0; i < 10; i++ {
 		err = dm.Put(ctx, testutil.ToKey(i), testutil.ToVal(i), nil)
@@ -212,12 +215,13 @@ func TestDMap_Put_NX(t *testing.T) {
 
 func TestDMap_Put_XX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	pc := &PutConfig{
 		HasXX: true,
@@ -240,13 +244,17 @@ func TestDMap_Put_XX(t *testing.T) {
 
 func TestDMap_Put_EX(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	pc := &PutConfig{
 		HasEX: true,
@@ -259,9 +267,6 @@ func TestDMap_Put_EX(t *testing.T) {
 
 	<-time.After(time.Second)
 
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
-
 	for i := 0; i < 10; i++ {
 		_, err := dm2.Get(ctx, testutil.ToKey(i))
 		if err != ErrKeyNotFound {
@@ -272,13 +277,17 @@ func TestDMap_Put_EX(t *testing.T) {
 
 func TestDMap_Put_EXAT(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	pc := &PutConfig{
 		HasEXAT: true,
@@ -291,9 +300,6 @@ func TestDMap_Put_EXAT(t *testing.T) {
 
 	<-time.After(time.Second)
 
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
-
 	for i := 0; i < 10; i++ {
 		_, err := dm2.Get(ctx, testutil.ToKey(i))
 		require.ErrorIs(t, err, ErrKeyNotFound)
@@ -302,13 +308,17 @@ func TestDMap_Put_EXAT(t *testing.T) {
 
 func TestDMap_Put_PXAT(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s1 := cluster.AddMember(nil).(*Service)
-	s2 := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s1 := cluster.AddMember(nil).(*Service)
 	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	s2 := cluster.AddMember(nil).(*Service)
+	dm2, err := s2.NewDMap("mydmap")
+	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	pc := &PutConfig{
 		HasPXAT: true,
@@ -321,9 +331,6 @@ func TestDMap_Put_PXAT(t *testing.T) {
 
 	<-time.After(10 * time.Millisecond)
 
-	dm2, err := s2.NewDMap("mydmap")
-	require.NoError(t, err)
-
 	for i := 0; i < 10; i++ {
 		_, err := dm2.Get(ctx, testutil.ToKey(i))
 		require.ErrorIs(t, err, ErrKeyNotFound)
@@ -332,12 +339,13 @@ func TestDMap_Put_PXAT(t *testing.T) {
 
 func TestDMap_Put_ErrKeyTooLarge(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	data := make([]byte, 300)
 	_, err = rand.Read(data)
@@ -349,12 +357,13 @@ func TestDMap_Put_ErrKeyTooLarge(t *testing.T) {
 
 func TestDMap_Put_ErrEntryTooLarge(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	ctx := context.Background()
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("mydmap")
 	require.NoError(t, err)
+
+	ctx := context.Background()
 
 	data := make([]byte, 1<<21)
 	_, err = rand.Read(data)

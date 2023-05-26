@@ -82,12 +82,13 @@ func TestDMap_Lock_With_Timeout_ErrLockNotAcquired_Standalone(t *testing.T) {
 
 func TestDMap_LockLease_Standalone(t *testing.T) {
 	cluster := testcluster.New(NewService)
-	s := cluster.AddMember(nil).(*Service)
 	defer cluster.Shutdown()
 
-	key := "lock.test.foo"
+	s := cluster.AddMember(nil).(*Service)
 	dm, err := s.NewDMap("lock.test")
 	require.NoError(t, err)
+
+	key := "lock.test.foo"
 
 	ctx := context.Background()
 	token, err := dm.Lock(context.Background(), key, time.Second, time.Second)

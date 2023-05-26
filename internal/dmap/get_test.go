@@ -139,19 +139,16 @@ func TestDMap_Get_NilValue_Cluster(t *testing.T) {
 	defer cluster.Shutdown()
 
 	s1 := cluster.AddMember(nil).(*Service)
-	dm, err := s1.NewDMap("mydmap")
+	dm1, err := s1.NewDMap("mydmap")
 	require.NoError(t, err)
 
 	s2 := cluster.AddMember(nil).(*Service)
-	_, err = s1.NewDMap("mydmap")
+	dm2, err := s2.NewDMap("mydmap")
 	require.NoError(t, err)
 
 	ctx := context.Background()
 
-	err = dm.Put(ctx, "foobar", nil, nil)
-	require.NoError(t, err)
-
-	dm2, err := s2.NewDMap("mydmap")
+	err = dm1.Put(ctx, "foobar", nil, nil)
 	require.NoError(t, err)
 
 	gr, err := dm2.Get(ctx, "foobar")
