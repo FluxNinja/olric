@@ -61,11 +61,11 @@ func TestIntegration_NodesJoinOrLeftDuringQuery(t *testing.T) {
 		err = dm.Put(ctx, fmt.Sprintf("mykey-%d", i), "myvalue")
 		require.NoError(t, err)
 		if i == 5999 {
-			go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+			cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 		}
 	}
 
-	go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+	cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 	t.Log("Fetch all keys")
 
@@ -82,7 +82,7 @@ func TestIntegration_NodesJoinOrLeftDuringQuery(t *testing.T) {
 			t.Logf("Shutdown one of the nodes: %s", db2.name)
 			require.NoError(t, db2.Shutdown(ctx))
 
-			go cluster.addMemberWithConfig(t, newConfig(), "mydmap")
+			cluster.addMemberWithConfig(t, newConfig(), "mydmap")
 
 			t.Log("Wait for \"NodeLeave\" event propagation")
 			<-time.After(time.Second)

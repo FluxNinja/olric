@@ -125,29 +125,29 @@ func requiredSizeForAnEntry(e storage.Entry) uint64 {
 }
 
 func prepareTableSize(raw interface{}) (size uint64, err error) {
-	switch raw := raw.(type) {
+	switch rawType := raw.(type) {
 	case uint:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case uint8:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case uint16:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case uint32:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case uint64:
-		size = raw
+		size = rawType
 	case int:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case int8:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case int16:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case int32:
-		size = uint64(raw)
+		size = uint64(rawType)
 	case int64:
-		size = uint64(raw)
+		size = uint64(rawType)
 	default:
-		err = fmt.Errorf("invalid type for tableSize: %s", reflect.TypeOf(raw))
+		err = fmt.Errorf("invalid type for tableSize: %s", reflect.TypeOf(rawType))
 		return
 	}
 	return

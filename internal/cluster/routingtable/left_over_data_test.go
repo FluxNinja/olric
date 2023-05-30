@@ -70,5 +70,4 @@ func TestRoutingTable_LeftOverData(t *testing.T) {
 			t.Fatalf("Expected partition owners count: 2. Got: %d, PartID: %d", part.OwnerCount(), partID)
 		}
 	}
-
 }

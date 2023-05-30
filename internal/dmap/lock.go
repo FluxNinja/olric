@@ -176,12 +176,10 @@ func (dm *DMap) leaseKey(ctx context.Context, key string, token []byte, timeout 
 
 	// get the key to check its value
 	e, err := dm.Get(ctx, key)
-	if errors.Is(err, ErrKeyNotFound) {
-		return ErrNoSuchLock
-	} else if errors.Is(err, ErrDMapNotFound) {
-		return ErrNoSuchLock
-	}
 	if err != nil {
+		if errors.Is(err, ErrKeyNotFound) {
+			return ErrNoSuchLock
+		}
 		return err
 	}
 
@@ -199,7 +197,6 @@ func (dm *DMap) leaseKey(ctx context.Context, key string, token []byte, timeout 
 	// update
 	err = dm.Expire(ctx, key, timeout)
 	if err != nil {
-		dm.s.log.V(2).Printf("[ERROR] lease failed: %v", err)
 		return fmt.Errorf("lease failed: %w", err)
 	}
 	return nil

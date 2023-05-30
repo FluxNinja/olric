@@ -6,9 +6,6 @@ TMP=$(mktemp /tmp/olric-coverage-XXXXX.txt)
 # Set the output file name
 OUT=$1
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-
 # Initialize the coverage output file
 echo 'mode: atomic' > "$OUT"
 

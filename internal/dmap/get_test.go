@@ -200,6 +200,7 @@ func TestDMap_Get_ReadRepair(t *testing.T) {
 	c2.ReadRepair = true
 	c2.ReplicaCount = 2
 	e2 := testcluster.NewEnvironment(c2)
+
 	s2 := cluster.AddMember(e2).(*Service)
 	_, err = s2.NewDMap("mydmap")
 	require.NoError(t, err)
