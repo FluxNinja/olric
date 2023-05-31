@@ -399,8 +399,6 @@ func (c *Config) Sanitize() error {
 
 	if c.Logger == nil {
 		c.Logger = log.New(c.LogOutput, "", log.LstdFlags)
-	} else {
-		c.Logger.SetOutput(c.LogOutput)
 	}
 
 	if c.Hasher == nil {
