@@ -290,7 +290,7 @@ Olric can send push cluster events to `cluster.events` channel. Available cluste
 * node-join-event
 * node-left-event
 * fragment-migration-event
-* fragment-received-even
+* fragment-received-event
 
 If you want to receive these events, set `true` to `EnableClusterEventsChannel` and subscribe to `cluster.events` channel. 
 The default is `false`.
