@@ -99,8 +99,10 @@ func (b *Balancer) scanPartition(sign uint64, part *partitions.Partition, owners
 
 func (b *Balancer) primaryCopies() {
 	sign := b.rt.Signature()
+	b.log.V(2).Printf("[KWAPIK] Balancing primary for sign %v", sign)
 	for partID := uint64(0); partID < b.config.PartitionCount; partID++ {
 		if b.breakLoop(sign) {
+			b.log.V(2).Printf("[KWAPIK] Balancing primary stopped at %v", partID)
 			break
 		}
 
@@ -141,9 +143,11 @@ func (b *Balancer) breakLoop(sign uint64) bool {
 
 func (b *Balancer) backupCopies() {
 	sign := b.rt.Signature()
+	b.log.V(2).Printf("[KWAPIK] Balancing backup for sign %v", sign)
 LOOP:
 	for partID := uint64(0); partID < b.config.PartitionCount; partID++ {
 		if b.breakLoop(sign) {
+			b.log.V(2).Printf("[KWAPIK] Balancing backup stopped at %v", partID)
 			break
 		}
 
@@ -185,6 +189,7 @@ LOOP:
 }
 
 func (b *Balancer) triggerBalancer() {
+	b.log.V(2).Printf("[KWAPIK] Balancer triggerred")
 	b.Lock()
 	defer b.Unlock()
 
