@@ -43,6 +43,7 @@ import (
 	"github.com/buraksezer/olric/internal/cluster/balancer"
 	"github.com/buraksezer/olric/internal/cluster/partitions"
 	"github.com/buraksezer/olric/internal/cluster/routingtable"
+	"github.com/buraksezer/olric/internal/discovery"
 	"github.com/buraksezer/olric/internal/dmap"
 	"github.com/buraksezer/olric/internal/environment"
 	"github.com/buraksezer/olric/internal/locker"
@@ -405,6 +406,11 @@ func (db *Olric) Shutdown(ctx context.Context) error {
 	var latestError error
 
 	sign := db.rt.Signature()
+	members := db.rt.Members()
+	members.Range(func(id uint64, m discovery.Member) bool {
+		db.log.V(2).Printf("[KWAPIK] Member %v", m.Name)
+		return false
+	})
 	if err := db.pubsub.Shutdown(ctx); err != nil {
 		db.log.V(2).Printf("[ERROR] Failed to shutdown PubSub service: %v", err)
 		latestError = err
@@ -422,6 +428,11 @@ func (db *Olric) Shutdown(ctx context.Context) error {
 
 	for {
 		newSign := db.rt.Signature()
+		members := db.rt.Members()
+		members.Range(func(id uint64, m discovery.Member) bool {
+			db.log.V(2).Printf("[KWAPIK] Member %v", m.Name)
+			return false
+		})
 		db.log.V(2).Printf("[KWAPIK] Waiting for new rt signature. Old: %v, new %v", sign, newSign)
 		if newSign != sign {
 			break
