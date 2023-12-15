@@ -414,6 +414,15 @@ func (db *Olric) Shutdown(ctx context.Context) error {
 		latestError = err
 	}
 
+	if err := db.rt.Discovery().Leave(db.config.LeaveTimeout); err != nil {
+		db.log.V(2).Printf("[ERROR] Failed to annouce leaving cluster: %v", err)
+		latestError = err
+	}
+
+	// We have already announced leaving cluster, but there are still some partitions
+	// that may require moving to other members.
+	db.balancer.BalanceEagerly()
+
 	if err := db.balancer.Shutdown(ctx); err != nil {
 		db.log.V(2).Printf("[ERROR] Failed to shutdown balancer service: %v", err)
 		latestError = err

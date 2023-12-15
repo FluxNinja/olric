@@ -208,6 +208,13 @@ func (d *Discovery) Rejoin(peers []string) (int, error) {
 	return d.memberlist.Join(peers)
 }
 
+// Leave will broadcast a leave message but will not shutdown the background
+// listeners, meaning the node will continue participating in gossip and state
+// updates.
+func (d *Discovery) Leave(timeout time.Duration) error {
+	return d.memberlist.Leave(timeout)
+}
+
 // GetMembers returns a full list of known alive nodes.
 func (d *Discovery) GetMembers() []Member {
 	var members []Member
