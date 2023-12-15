@@ -404,6 +404,7 @@ func (db *Olric) Shutdown(ctx context.Context) error {
 
 	var latestError error
 
+	sign := db.rt.Signature()
 	if err := db.pubsub.Shutdown(ctx); err != nil {
 		db.log.V(2).Printf("[ERROR] Failed to shutdown PubSub service: %v", err)
 		latestError = err
@@ -417,6 +418,15 @@ func (db *Olric) Shutdown(ctx context.Context) error {
 	if err := db.rt.Discovery().Leave(db.config.LeaveTimeout); err != nil {
 		db.log.V(2).Printf("[ERROR] Failed to annouce leaving cluster: %v", err)
 		latestError = err
+	}
+
+	for {
+		newSign := db.rt.Signature()
+		db.log.V(2).Printf("[KWAPIK] Waiting for new rt signature. Old: %v, new %v", sign, newSign)
+		if newSign != sign {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	// We have already announced leaving cluster, but there are still some partitions
